@@ -4,6 +4,7 @@ import io.wispforest.owo.ui.component.TextBoxComponent;
 import io.wispforest.owo.ui.core.Sizing;
 import io.wispforest.owo.ui.util.UISounds;
 import net.minecraft.client.input.MouseButtonEvent;
+import org.jspecify.annotations.NonNull;
 
 public class MiniEditBoxComponent extends TextBoxComponent {
     public MiniEditBoxComponent(Sizing horizontalSizing, String text) {
@@ -15,9 +16,9 @@ public class MiniEditBoxComponent extends TextBoxComponent {
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean bl) {
+    public boolean mouseClicked(@NonNull MouseButtonEvent mouseButtonEvent, boolean bl) {
         if (super.mouseClicked(mouseButtonEvent, bl)) {
-            UISounds.playButtonSound();
+            UISounds.playInteractionSound();
             return true;
         }
         return false;
