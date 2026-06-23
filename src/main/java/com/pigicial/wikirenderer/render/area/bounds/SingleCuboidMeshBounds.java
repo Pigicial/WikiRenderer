@@ -1,5 +1,6 @@
 package com.pigicial.wikirenderer.render.area.bounds;
 
+import com.pigicial.wikirenderer.render.area.AreaPropertyBundle;
 import com.pigicial.wikirenderer.render.area.MeshRenderSection;
 import com.pigicial.wikirenderer.render.area.WorldBlockMesh;
 import com.pigicial.wikirenderer.render.area.side_view.ExpansionSide;
@@ -52,7 +53,11 @@ public class SingleCuboidMeshBounds implements ExpandableMeshBounds {
         BlockPos oldMax = this.max;
 
         this.modifyBounds(side.getDirection(currentRotation), multiplier);
-        this.dirtyDifference(mesh, oldMin, oldMax, this.min, this.max, multiplier >= 1);
+        if (mesh.lastUpdateUsesWalkabilityFilter != AreaPropertyBundle.INSTANCE.useWalkabilityFilter.get()) {
+            mesh.scheduleRebuild(true);
+        } else {
+            this.dirtyDifference(mesh, oldMin, oldMax, this.min, this.max, multiplier >= 1);
+        }
     }
 
     private void modifyBounds(Vec3i worldFacing, int multiplier) {
