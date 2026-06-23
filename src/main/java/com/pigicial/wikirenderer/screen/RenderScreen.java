@@ -501,6 +501,7 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
                     int framerate = 20;
                     globalProperties.exportFramerate.set(framerate);
                     globalProperties.exportFrames.set(seconds * framerate);
+                    this.guiRebuildScheduled = true;
                 }).margins(Insets.vertical(5)));
             }
 
