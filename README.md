@@ -35,7 +35,7 @@ Items can be rendered in three ways:
 3. Type `/wikirender item id <item>`, where `<item>` is something like `minecraft:diamond`
 4. Type `/wikirender item texture <texture>`, where `<texture>` is a texture ID or base64 of a texture ID for a player head
 
-Below is an example of an enchanted compass made using `/wikirender item id minecraft:compass[minecraft:enchantment_glint_override=true]`:
+Below is an example of an enchanted compass made using `/wikirender item id minecraft:compass`:
 
 <img src="src/main/resources/assets/wikirenderer/readme_images/enchanted_compass_menu.png" width="600" alt="Enchanted Compass Menu">
 
@@ -43,7 +43,7 @@ On the right is an option to speed up enchantment glint speeds. Normally, at 100
 
 <img src="src/main/resources/assets/wikirenderer/readme_images/enchanted_item_animation_options.png" width="300" alt="Enchantment Animation Options">
 
-Player Heads can also be rendered, and you can also grab their texture data with included buttons:
+Player Heads can also be rendered, and you can also grab their texture data with included buttons. This was rendered with `/wr item texture d7cc6687423d0570d556ac53e0676cb563bbdd9717cd8269bdebed6f6d4e7bf8`.
 
 <img src="src/main/resources/assets/wikirenderer/readme_images/player_head_item_render_menu.png" width="600" alt="Player Head Render Menu">
 
@@ -72,7 +72,7 @@ Area renders also feature topdown and side-view rendering modes, which allow you
 <img src="src/main/resources/assets/wikirenderer/readme_images/spiders_den_minimap_menu.png" width="600" alt="Hypixel SkyBlock Spider's Den Minimap Render">
 <img src="src/main/resources/assets/wikirenderer/readme_images/lapis_quarry_cave_mode.png" width="600" alt="Hypixel SkyBlock Lapis Quarry Cave Minimap Render">
 
-Minimap data can also be exported for use on the [Hypixel SkyBlock Fandom Wiki's Module:Minimap/Datasheet Minimap Calibrator tool](https://hypixel-skyblock.fandom.com/wiki/Module:Minimap/Datasheet).
+Minimap data can also be exported for use on the [Hypixel SkyBlock Wiki's Module:Minimap/Datasheet Minimap Calibrator tool](https://hypixelskyblock.minecraft.wiki/Module:Minimap/Datasheet).
 
 ### Item Frame Minimaps
 On the topic of Minimaps, you can also use area rendering and side angle viewing to render pixel-perfect maps:
@@ -107,7 +107,7 @@ Individual blocks and block states can be rendered in three ways:
 2. Type `/wikirender block <block>`, where `<block>` is something like `minecraft:cobblestone`
 3. Type `/wikirender block <block>[data]`, as seen below
 
-Below is an example of rendering a furnace using `/wikirender block minecraft:furnace[lit=true]{Items:[{Slot:0b, Count: 1b, id: "minecraft:coal"}]}` ([definitely not a copied command](https://docs.wispforest.io/isometric-renders/slash_isorender#isorender-block))
+Below is an example of rendering a furnace using `/wikirender block minecraft:furnace[lit=true]{Items:[{Slot:0b, Count: 1b, id: "minecraft:coal"}]}`
 
 <img src="src/main/resources/assets/wikirenderer/readme_images/furnace_block_state_render.png" width="300" alt="Furnace Block State Render Menu">
 
