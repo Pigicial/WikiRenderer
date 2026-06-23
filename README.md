@@ -24,7 +24,7 @@ WikiRenderer supports the following render types:
 - Batch export of multiple blocks or items
     - Can pull from creative tabs, item namespaces, or your inventory
     - Can also render multiple items into an atlas
-- Animated exports for items, entities, blocks states or world areas (in `.gif`, `.apng`, `.webp`, or `.mp4` formats)
+- Animated exports for items, entities, blocks states or world areas in various file formats (`.gif` using Gifski (built in), or `.apng`, `.webp`, `.mov`, or `.mp4` using FFmpeg (separate installation required))
 
 The main command is `/wikirender`, but `/wr` also exists as an alias.
 
