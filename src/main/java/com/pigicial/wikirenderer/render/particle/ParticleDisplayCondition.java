@@ -9,7 +9,7 @@ import java.util.function.Supplier;
 
 public class ParticleDisplayCondition implements Predicate<Particle> {
 
-    public static final ParticleDisplayCondition DURING_TICK = new ParticleDisplayCondition(particle -> WikiRenderer.inRenderableTick);
+    public static final ParticleDisplayCondition DURING_TICK = new ParticleDisplayCondition(particle -> WikiRenderer.inRenderableTick || ParticleRendererAndLooper.renderingParticles);
     public static final ParticleDisplayCondition SHOW_ALL = new ParticleDisplayCondition(particle -> true);
     public static final ParticleDisplayCondition HIDE_ALL = new ParticleDisplayCondition(particle -> false);
 
