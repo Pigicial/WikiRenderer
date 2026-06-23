@@ -990,7 +990,8 @@ public class EntityTypeSpecificOverrides<S extends EntityRenderState> {
                     for (Holder.Reference<WolfVariant> variant : RegistryOverride.getHolderValues(Registries.WOLF_VARIANT)) {
                         WolfVariant possibleVariant = variant.value();
 
-                        if (Objects.equals(s.texture, possibleVariant.assetInfo().tame().texturePath())
+                        if (Objects.equals(s.texture, possibleVariant.assetInfo().wild().texturePath())
+                            || Objects.equals(s.texture, possibleVariant.assetInfo().tame().texturePath())
                             || Objects.equals(s.texture, possibleVariant.assetInfo().angry().texturePath())) {
                             value = possibleVariant;
                             break;
