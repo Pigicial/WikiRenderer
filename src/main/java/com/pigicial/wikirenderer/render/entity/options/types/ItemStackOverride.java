@@ -111,8 +111,12 @@ public class ItemStackOverride<S extends EntityRenderState> extends OptionalOver
     @Override
     public void copyFromRenderState(S renderState) {
         super.copyFromRenderState(renderState);
+        if (this.value == null) {
+            this.value = ItemStack.EMPTY;
+        }
+
         // todo: make player heads on the helmet slot copy over properly
-        if (this.value != null && !this.value.isEmpty()) {
+        if (!this.value.isEmpty()) {
             if (this.dyeColor == null || this.dyeColor.isBlank()) {
                 DyedItemColor color = this.value.get(DataComponents.DYED_COLOR);
                 if (color != null) {

@@ -419,10 +419,27 @@ public class EntityTypeSpecificOverrides<S extends EntityRenderState> {
         registerOverrides(HappyGhastRenderState.class, overrides -> {
             overrides.registerEnumOverride("harnessColor", DyeColor.class, state -> null, (state, value) -> {
                 if (value == null) {
-                    state.bodyItem = null;
+                    state.bodyItem = ItemStack.EMPTY;
                 } else {
-                    state.bodyItem = new ItemStack(Items.WHITE_HARNESS);
-                    state.bodyItem.set(DataComponents.EQUIPPABLE, Equippable.harness(value));
+                    // i hate this but doing Equippable.harness crashes due to a frozen registry so whatever
+                    state.bodyItem = new ItemStack(switch (value) {
+                        case WHITE -> Items.WHITE_HARNESS;
+                        case ORANGE -> Items.ORANGE_HARNESS;
+                        case MAGENTA -> Items.MAGENTA_HARNESS;
+                        case LIGHT_BLUE -> Items.LIGHT_BLUE_HARNESS;
+                        case YELLOW -> Items.YELLOW_HARNESS;
+                        case LIME -> Items.LIME_HARNESS;
+                        case PINK -> Items.PINK_HARNESS;
+                        case GRAY -> Items.GRAY_HARNESS;
+                        case LIGHT_GRAY -> Items.LIGHT_GRAY_HARNESS;
+                        case CYAN -> Items.CYAN_HARNESS;
+                        case PURPLE -> Items.PURPLE_HARNESS;
+                        case BLUE -> Items.BLUE_HARNESS;
+                        case BROWN -> Items.BROWN_HARNESS;
+                        case GREEN -> Items.GREEN_HARNESS;
+                        case RED -> Items.RED_HARNESS;
+                        case BLACK -> Items.BLACK_HARNESS;
+                    });
                 }
             });
             overrides.registerBooleanOverride("isRidden", s -> s.isRidden, (s, value) -> s.isRidden = value);
