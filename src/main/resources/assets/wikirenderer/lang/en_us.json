@@ -441,6 +441,8 @@
 
   "message.wikirenderer.sb_cosmetic_rendering_keybind_overrides_enabled": "Keybind Overrides for Animated Hypixel SkyBlock Cosmetics §aenabled§7.\nFor animated player heads on entities (Pet Skins, Power Orbs, Helmet Skins, etc), select the item in a menu for rendering to set it as the first frame, then try and render the entity. Letting multiple loops play leads to better results.\nFor animated dyed armor, render the entity used to preview the dyed armor.",
   "message.wikirenderer.sb_cosmetic_rendering_keybind_overrides_disabled": "Keybind Overrides for Animated Hypixel SkyBlock Cosmetics §cdisabled§7.",
+  "message.wikirenderer.sb_texture_file_exporting_enabled": "File exporting for Player Head item renders §aenabled§7.",
+  "message.wikirenderer.sb_texture_file_exporting_disabled": "File exporting for Player Head item renders §cdisabled§7.",
   "message.wikirenderer.sb_player_head_mark_first_success": "Texture marked as the first for the next animation!",
   "message.wikirenderer.sb_player_head_mark_first_fail": "This item does not have a texture to be marked as first.",
   "message.wikirenderer.not_equippable_entity": "This entity cannot wear items needed for cosmetic rendering.",

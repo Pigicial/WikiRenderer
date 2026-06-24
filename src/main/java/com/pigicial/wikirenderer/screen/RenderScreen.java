@@ -1,5 +1,6 @@
 package com.pigicial.wikirenderer.screen;
 
+import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.FramerateLimitTracker;
 import com.mojang.blaze3d.platform.Window;
@@ -30,10 +31,12 @@ import com.pigicial.wikirenderer.render.export.animation.ffmpeg.live.LiveRenderF
 import com.pigicial.wikirenderer.render.export.animation.gifski.GifskiDispatcher;
 import com.pigicial.wikirenderer.render.export.animation.gifski.MemoryBasedGifskiAnimationHandler;
 import com.pigicial.wikirenderer.render.item.AnimationTimingsProvider;
+import com.pigicial.wikirenderer.render.item.ItemRenderable;
 import com.pigicial.wikirenderer.render.particle.ParticleDisplayCondition;
 import com.pigicial.wikirenderer.render.skyblock.frame_based.DyedArmorFrameBasedRenderable;
 import com.pigicial.wikirenderer.render.skyblock.frame_based.FrameBasedRenderable;
 import com.pigicial.wikirenderer.render.skyblock.frame_based.ItemFrameBasedRenderable;
+import com.pigicial.wikirenderer.textures.TextureData;
 import com.pigicial.wikirenderer.textures.TextureDataProvider;
 import com.pigicial.wikirenderer.util.Translate;
 import com.pigicial.wikirenderer.util.compatibility.ShaderCheck;
@@ -724,6 +727,16 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
                                 : defaultExportPath.differentFileName(customFileName + "_area_render_minimap_data");
 
                         FileIO.saveTextAndNotify(fileText, minimapExportPath, this, "exported_minimap_data_as");
+                    }
+
+                    // todo move this
+                    if (renderable instanceof ItemRenderable textureDataProvider && GlobalProperties.get().sbExportItemTextureData.get()) {
+                        TextureData textureData = textureDataProvider.getTextureData(null).get("item");
+                        if (textureData != null) {
+                            String hash = textureData.payload().textures().get(MinecraftProfileTexture.Type.SKIN).getHash();
+                            String text = "{{HeadRender|" + hash + "|creator=Hypixel}}";
+                            FileIO.saveTextAndNotify(text, exportPath, this, "exported_texture_data_as");
+                        }
                     }
                 });
     }

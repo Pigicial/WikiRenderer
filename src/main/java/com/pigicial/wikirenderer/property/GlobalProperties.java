@@ -41,6 +41,7 @@ public class GlobalProperties implements SerializablePropertyBundle {
     public final Property<Boolean> saveIndividualFrames = Property.of(false);
     public final IntProperty gifskiQuality = IntProperty.of(100, 1, 100);
 
+    public final transient Property<Boolean> sbExportItemTextureData = Property.of(false);
     public final transient Property<Boolean> sbFrameRenderingKeybindOverrides = Property.of(false);
 
     @Override
