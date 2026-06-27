@@ -74,7 +74,7 @@ public class ItemFrameBasedRenderable extends FrameBasedRenderable<TextureData, 
 
     @Override
     protected void updateRenderable(ItemRenderable renderable, TextureData sourceData) {
-        renderable.stack = PlayerTextureUtils.createPlayerHead(sourceData.profile());
+        renderable.setItemStack(PlayerTextureUtils.createPlayerHead(sourceData.profile()));
     }
 
     // ic request

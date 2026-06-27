@@ -1,10 +1,7 @@
 package com.pigicial.wikirenderer.render.item;
 
 import com.mojang.math.Axis;
-import com.pigicial.wikirenderer.property.DefaultCroppablePropertyBundle;
-import com.pigicial.wikirenderer.property.GlobalProperties;
-import com.pigicial.wikirenderer.property.Property;
-import com.pigicial.wikirenderer.property.SerializablePropertyBundle;
+import com.pigicial.wikirenderer.property.*;
 import com.pigicial.wikirenderer.property.config.WikiRendererConfigs;
 import com.pigicial.wikirenderer.render.Renderable;
 import com.pigicial.wikirenderer.render.export.ImageRescaleMode;
@@ -38,6 +35,7 @@ public class ItemRenderablePropertyBundle extends DefaultCroppablePropertyBundle
     public final Property<Boolean> overrideDyeColors = Property.of(false);
     public int dyeColorOverride = 0;
 
+    public final Property<Boolean> useModelOverrides = Property.of(false);
     protected int blockItemsExportResolution = 300;
 
     @Override
@@ -102,7 +100,8 @@ public class ItemRenderablePropertyBundle extends DefaultCroppablePropertyBundle
     }
 
     @Override
-    public void buildMainGUIControls(Renderable<?> renderable, RenderScreen screen, FlowLayout container) {
+    public void buildMainGUIControls(Renderable<?> r, RenderScreen screen, FlowLayout container) {
+        ItemRenderable renderable = ((ItemRenderable) r);
         WikiRendererUI.text(container, "transform_options", false);
         WikiRendererUI.intControl(screen, container, scale, "scale");
         if (!crop.get() || rescaleMode.get() == ImageRescaleMode.DISABLED) {
@@ -119,7 +118,7 @@ public class ItemRenderablePropertyBundle extends DefaultCroppablePropertyBundle
         container.child(this.buildResetButton());
 
         // todo figure out a better way to check for glint support
-        ItemStack stack = ((ItemRenderable) renderable).stack;
+        ItemStack stack = renderable.stack;
         if (!stack.is(Items.PLAYER_HEAD) || DYEABLE_ITEMS.contains(stack.getItem())) {
             WikiRendererUI.text(container, "item_options", true);
         }
@@ -154,6 +153,14 @@ public class ItemRenderablePropertyBundle extends DefaultCroppablePropertyBundle
 
                 WikiRendererUI.text(container, Translate.gui(overrideDyeColors.get() ? "original_dye_color" : "item_dye_color", hexText, rgbText), 10);
             }
+        }
+
+        IntProperty modelIndexOption = renderable.getCurrentModelIndex();
+        if (modelIndexOption != null) {
+            WikiRendererUI.text(container, "item_model_options", true);
+            WikiRendererUI.text(container, Translate.gui("model_combinations_detected", modelIndexOption.max()), 5);
+            WikiRendererUI.booleanControl(container, this.useModelOverrides, "use_model_overrides");
+            WikiRendererUI.conditionalIntControl(screen, container, modelIndexOption, "use_model_overrides", useModelOverrides::get);
         }
     }
 }

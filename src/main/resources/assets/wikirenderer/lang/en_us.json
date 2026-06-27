@@ -59,6 +59,9 @@
   "gui.wikirenderer.override_dye_color.tooltip": "Overrides the dye color on dyeable items, like leather armor.",
   "gui.wikirenderer.item_dye_color": "Item Dye Color: %s (%s)",
   "gui.wikirenderer.original_dye_color": "Original Dye Color: %s (%s)",
+  "gui.wikirenderer.item_model_options": "§nItem Model Options",
+  "gui.wikirenderer.model_combinations_detected": "%s Model Combinations Detected",
+  "gui.wikirenderer.use_model_overrides": "Use Model Overrides",
   "gui.wikirenderer.item_scale_warning_1": "Note: It's recommended to",
   "gui.wikirenderer.item_scale_warning_2": "keep scale at 100% for items!",
 

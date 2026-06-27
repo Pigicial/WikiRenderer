@@ -3,24 +3,31 @@ package com.pigicial.wikirenderer.render.item;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.pigicial.wikirenderer.WikiRenderer;
 import com.pigicial.wikirenderer.mixin.access.ItemStackRenderStateAccessor;
+import com.pigicial.wikirenderer.property.IntProperty;
 import com.pigicial.wikirenderer.render.batch.DynamicBatchLabelProvider;
 import com.pigicial.wikirenderer.render.export.ExportPathSpec;
+import com.pigicial.wikirenderer.render.item.models.ItemModelsProcessor;
 import com.pigicial.wikirenderer.screen.RenderScreen;
 import com.pigicial.wikirenderer.textures.PlayerTextureUtils;
 import com.pigicial.wikirenderer.textures.TextureData;
 import com.pigicial.wikirenderer.textures.TextureDataProvider;
-import com.pigicial.wikirenderer.util.ItemNameUtil;
 import com.pigicial.wikirenderer.util.AnimationTimingUtil;
+import com.pigicial.wikirenderer.util.ItemNameUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.item.ItemModel;
+import net.minecraft.client.renderer.item.ItemModelResolver;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.DyedItemColor;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4fStack;
 
 import java.util.*;
@@ -30,13 +37,31 @@ public class ItemRenderable extends ItemBasedRenderable<ItemRenderablePropertyBu
     private static final ItemStackRenderState RENDER_STATE = new ItemStackRenderState();
 
     public ItemStack stack;
-    private Map<String, TextureData> textureData = null;
+    @Nullable
+    private List<ItemModel> models = null;
+    @Nullable
+    private IntProperty currentModelIndex = null;
 
+    @Nullable
+    private Map<String, TextureData> textureData = null;
+    @Nullable
     private DyedItemColor actualDyedItemColor = null;
 
     public ItemRenderable(ItemStack stack) {
-        this.stack = stack;
+        this.setItemStack(stack);
         this.customFileName = ItemNameUtil.getItemDisplayName(this.stack);
+    }
+
+    public void setItemStack(ItemStack itemStack) {
+        this.stack = itemStack;
+        this.models = ItemModelsProcessor.getModels(stack);
+        if (models != null && models.size() > 1) {
+            currentModelIndex = IntProperty.of(1, 1, models.size());
+        }
+    }
+
+    public @Nullable IntProperty getCurrentModelIndex() {
+        return currentModelIndex;
     }
 
     @Override
@@ -76,19 +101,29 @@ public class ItemRenderable extends ItemBasedRenderable<ItemRenderablePropertyBu
             stack.set(DataComponents.DYED_COLOR, new DyedItemColor(properties.dyeColorOverride));
         }
 
-        Minecraft.getInstance().getItemModelResolver().appendItemLayers(
-                RENDER_STATE,
-                this.stack,
-                ItemDisplayContext.GUI,
-                Minecraft.getInstance().level,
-                null,
-                0
-        );
+        ItemModelResolver itemModelResolver = Minecraft.getInstance().getItemModelResolver();
+
+        Identifier modelId = stack.get(DataComponents.ITEM_MODEL);
+        ModelManager modelManager = Minecraft.getInstance().getModelManager();
+        if (properties.useModelOverrides.get() && modelId != null && models != null && !models.isEmpty()) {
+            RENDER_STATE.setOversizedInGui(modelManager.getItemProperties(modelId).oversizedInGui());
+
+            ItemModel itemModel = models.get(currentModelIndex == null ? 0 : Math.min(currentModelIndex.get(), models.size()) - 1);
+            itemModel.update(RENDER_STATE, stack, itemModelResolver, ItemDisplayContext.GUI, Minecraft.getInstance().level, null, 0);
+        } else {
+            itemModelResolver.appendItemLayers(
+                    RENDER_STATE,
+                    this.stack,
+                    ItemDisplayContext.GUI,
+                    Minecraft.getInstance().level,
+                    null,
+                    0
+            );
+        }
     }
 
     @Override
     public void emitVerticesThenDraw(RenderScreen renderScreen, Matrix4fStack matrix4fStack, PoseStack matrices, float tickDelta, long timeSinceCreationMs) {
-
         ((ItemStackRenderStateAccessor) RENDER_STATE).wikirenderer$setDisplayContext(ItemDisplayContext.GUI);
         RENDER_STATE.submit(matrices, Minecraft.getInstance().gameRenderer.getSubmitNodeStorage(), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, 0);
     }
@@ -97,7 +132,7 @@ public class ItemRenderable extends ItemBasedRenderable<ItemRenderablePropertyBu
     public void cleanUp() {
         RENDER_STATE.clear();
         WikiRenderer.overrideGlint = false;
-        
+
         stack.set(DataComponents.DYED_COLOR, this.actualDyedItemColor);
         this.actualDyedItemColor = null;
     }
