@@ -119,7 +119,7 @@ public class WikiRendererKeybinds {
             if (KEYBIND_BATCH_RENDER_INVENTORY_ITEMS.matches(key)) {
                 List<ItemStack> items = getItems(client);
                 if (items != null && !items.isEmpty()) {
-                    Minecraft.getInstance().setScreen(new SelectRenderTaskScreen(items));
+                    ScreenSchedulerAndSaver.openPreservingCurrentContainer(new SelectRenderTaskScreen(items));
                 }
             }
 

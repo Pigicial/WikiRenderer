@@ -81,7 +81,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
-public class RenderScreen extends BaseOwoScreen<FlowLayout> {
+public class RenderScreen extends BaseOwoScreen<FlowLayout> implements ContainerPreservingScreen {
 
     private static final Int2ObjectMap<Consumer<DefaultPropertyBundle>> KEYBOARD_CONTROLS = new Int2ObjectOpenHashMap<>();
 
@@ -139,6 +139,7 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
     public int mouseX;
     public int mouseY;
 
+    @Nullable
     private AbstractContainerScreen<?> previouslyOpenedContainerScreen = null;
 
     public RenderScreen(Renderable<?> renderable) {
@@ -146,8 +147,14 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
         this.memoryGuard.update();
     }
 
-    public void setPreviouslyOpenedContainerScreen(AbstractContainerScreen<?> previouslyOpenedContainerScreen) {
+    @Override
+    public void setPreviouslyOpenedContainerScreen(@Nullable AbstractContainerScreen<?> previouslyOpenedContainerScreen) {
         this.previouslyOpenedContainerScreen = previouslyOpenedContainerScreen;
+    }
+
+    @Override
+    public @Nullable AbstractContainerScreen<?> getPreviouslyOpenedContainerScreen() {
+        return this.previouslyOpenedContainerScreen;
     }
 
     @Override
@@ -882,11 +889,9 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
 
     @Override
     public void onClose() {
+        if (ScreenSchedulerAndSaver.restorePreviouslyOpenedContainer(this)) return;
+
         super.onClose();
-        if (this.previouslyOpenedContainerScreen != null) {
-            this.previouslyOpenedContainerScreen.onClose();
-            this.previouslyOpenedContainerScreen = null;
-        }
     }
 
     @Override
