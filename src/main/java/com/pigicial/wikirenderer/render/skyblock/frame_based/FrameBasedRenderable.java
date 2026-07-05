@@ -27,6 +27,11 @@ public abstract class FrameBasedRenderable<S, R extends Renderable<P>, P extends
     protected List<FrameData<S>> currentDataSet;
     private InterpolatedTimings timingData;
 
+    // for head-based animations with the texture-marked frame appearing multiple times, being able to adjust the timings to ensure consistency is very useful
+    private final List<Integer> validPhaseOffsets = new ArrayList<>();
+    private int phaseOffsetIndex = 0;
+    private long lastPhaseOffsetsHash = 0;
+
     protected S lastUpdatedSourceData;
     protected R renderable;
     protected FrameData<S> currentFrame;
@@ -41,114 +46,6 @@ public abstract class FrameBasedRenderable<S, R extends Renderable<P>, P extends
         this.dataSourceSupplier = dataSourceSupplier;
         this.propertyBundle = new FrameBasedPropertyBundle<>(this, propertyBundle);
         this.fetch();
-    }
-
-    public void fetch() {
-        currentDataSet = new ArrayList<>();
-
-        TreeMap<Integer, S> data = this.dataSourceSupplier.get();
-        for (Map.Entry<Integer, S> entry : data.entrySet()) {
-            currentDataSet.add(new FrameData<>(entry.getKey(), entry.getValue()));
-        }
-        lastFetchRawFrameCount = data.size();
-
-        FrameData<S> firstMarkedFrame = currentDataSet.getFirst();
-        S matchingFirstMarkedData = this.getMatchingFirstMarkedData();
-
-        if (matchingFirstMarkedData != null) {
-            for (int frameIndex = 0, currentDataSetSize = currentDataSet.size(); frameIndex < currentDataSetSize; frameIndex++) {
-                FrameData<S> frameData = currentDataSet.get(frameIndex);
-                if (this.sourceDataMatches(frameData.sourceData(), matchingFirstMarkedData)) {
-                    // WikiRenderer.LOGGER.info("Matching first frame is {}", frameIndex);
-                    firstMarkedFrame = frameData;
-
-                    if (frameIndex > 0) {
-                        currentDataSet.subList(0, frameIndex).clear();
-                        // WikiRenderer.LOGGER.info("Removing 0 to {} due to it being cut off (before the first marked frame)", frameIndex);
-                    }
-                    break;
-                }
-            }
-        }
-
-        // auto-refresh the first frame incase it changes (i.e. from not seeing a matching frame as to what you selected before when you opened it to then seeing it)
-        this.currentFrame = currentDataSet.getFirst();
-        this.currentIndex = 0;
-        this.getOrUpdateRenderable();
-
-        // get animation ranges
-        List<int[]> subAnimationsRanges = new ArrayList<>();
-        int lastMatchingIndex = 0;
-        for (int i = 0, currentDataSetSize = currentDataSet.size(); i < currentDataSetSize; i++) {
-            FrameData<S> frameData = currentDataSet.get(i);
-            if (sourceDataMatches(frameData.sourceData(), firstMarkedFrame.sourceData())) {
-                if (i != 0) {
-                    subAnimationsRanges.add(new int[]{lastMatchingIndex, i});
-                    // WikiRenderer.LOGGER.info("Range {} to {} is duration {}", lastMatchingIndex, i, i - lastMatchingIndex);
-                }
-                lastMatchingIndex = i;
-            }
-        }
-
-        if (subAnimationsRanges.isEmpty()) {
-            // WikiRenderer.LOGGER.warn("No complete animation loops found");
-            return;
-        }
-
-        // remove cut off loop at the end
-        if (lastMatchingIndex < currentDataSet.size()) {
-            currentDataSet.subList(lastMatchingIndex, currentDataSet.size()).clear();
-            // WikiRenderer.LOGGER.info("Removing {} to {} due to it being cut off", lastMatchingIndex, currentDataSet.size());
-        }
-
-        // remove shorter loops (missing textures due to server lag or whatever)
-        int longestLoopFrameCount = subAnimationsRanges.stream().mapToInt(range -> range[1] - range[0]).max().orElseThrow();
-        for (int i = subAnimationsRanges.size() - 1; i >= 0; i--) {
-            int[] range = subAnimationsRanges.get(i);
-            int frameCount = range[1] - range[0];
-            if (frameCount != longestLoopFrameCount) {
-                // WikiRenderer.LOGGER.info("Removing {} to {} due to {} not matching {}", range[0], range[1], frameCount, longestLoopFrameCount);
-                currentDataSet.subList(range[0], range[1]).clear();
-                subAnimationsRanges.remove(i);
-            }
-        }
-
-        // re-derive ranges from clean dataset
-        int loopCount = subAnimationsRanges.size();
-        // WikiRenderer.LOGGER.info("Clean dataset: {} loops of duration {}", loopCount, longestLoopFrameCount);
-        this.timingData = this.getTimings(currentDataSet, longestLoopFrameCount);
-        this.timingData.resetForEntity(entityID);
-
-        for (int loop = 0; loop < loopCount; loop++) {
-            int from = loop * longestLoopFrameCount;
-            int to = from + longestLoopFrameCount;
-
-            for (int i = from; i < to; i++) {
-                FrameData<S> frameData = currentDataSet.get(i);
-                int animationIndex = i % longestLoopFrameCount;
-
-                int frameDuration;
-                if (i + 1 < currentDataSet.size()) {
-                    // time til next frame (if it exists)
-                    frameDuration = currentDataSet.get(i + 1).recordedTimingMsOffset()
-                                    - frameData.recordedTimingMsOffset();
-                } else {
-                    if (i == 0) {
-                        frameDuration = 50;
-                    } else {
-                        // use second-to-last frame's duration as a guess
-                        frameDuration = currentDataSet.get(i).recordedTimingMsOffset()
-                                        - currentDataSet.get(i - 1).recordedTimingMsOffset();
-                    }
-                }
-
-                timingData.submit(entityID, animationIndex, frameDuration);
-            }
-        }
-
-        if (loopCount > 1) {
-            currentDataSet.subList(longestLoopFrameCount, currentDataSet.size()).clear();
-        }
     }
 
     public abstract ItemComponent createItemComponentForPreview(FrameData<S> frameData);
@@ -166,6 +63,157 @@ public abstract class FrameBasedRenderable<S, R extends Renderable<P>, P extends
     protected abstract R createBlankRenderable();
 
     protected abstract void updateRenderable(R renderable, S sourceData);
+
+    public void fetch() {
+        currentDataSet = new ArrayList<>();
+
+        TreeMap<Integer, S> data = this.dataSourceSupplier.get();
+        for (Map.Entry<Integer, S> entry : data.entrySet()) {
+            currentDataSet.add(new FrameData<>(entry.getKey(), entry.getValue()));
+        }
+        lastFetchRawFrameCount = data.size();
+
+        // trim frames before the user-selected first frame
+        S matchingFirstMarkedData = this.getMatchingFirstMarkedData();
+
+        if (matchingFirstMarkedData != null) {
+            for (int frameIndex = 0; frameIndex < currentDataSet.size(); frameIndex++) {
+                FrameData<S> frameData = currentDataSet.get(frameIndex);
+                if (this.sourceDataMatches(frameData.sourceData(), matchingFirstMarkedData)) {
+                    if (frameIndex > 0) {
+                        currentDataSet.subList(0, frameIndex).clear();
+                    }
+                    break;
+                }
+            }
+        }
+
+        // auto-refresh the first frame incase it changes (i.e. from not seeing a matching frame as to what you selected before when you opened it to then seeing it)
+        this.currentFrame = currentDataSet.getFirst();
+        this.currentIndex = 0;
+        this.getOrUpdateRenderable();
+
+        if (currentDataSet.size() < 2) {
+            return;
+        }
+
+        // find the loop length that tiles the dataset most consistently
+        int bestLength = -1;
+        int bestScore = -1;
+
+        // todo make this check most frequent combination of hashes, not most frequent length
+        for (int candidateLength = 1; candidateLength <= currentDataSet.size(); candidateLength++) {
+            int matches = 0;
+
+            for (int i = candidateLength; i < currentDataSet.size(); i++) {
+                S reference = currentDataSet.get(i % candidateLength).sourceData();
+                S actual = currentDataSet.get(i).sourceData();
+                if (sourceDataMatches(reference, actual)) {
+                    matches++;
+                }
+            }
+
+            int requiredMinMatchAmount = bestScore == -1 ? 1 : 2;
+            if (matches >= requiredMinMatchAmount && (matches > bestScore || (matches == bestScore && candidateLength > bestLength))) {
+                bestScore = matches;
+                bestLength = candidateLength;
+            }
+        }
+
+        if (bestLength == -1) {
+            // WikiRenderer.LOGGER.warn("No complete animation loops found");
+            return;
+        }
+
+        int loopCount = currentDataSet.size() / bestLength;
+
+        // remove cut off loop at the end
+        currentDataSet.subList(loopCount * bestLength, currentDataSet.size()).clear();
+
+        // WikiRenderer.LOGGER.info("Clean dataset: {} loops of duration {}", loopCount, bestLength);
+        this.timingData = this.getTimings(currentDataSet, bestLength);
+        this.timingData.resetForEntity(entityID);
+
+        for (int loop = 0; loop < loopCount; loop++) {
+            int from = loop * bestLength;
+            int to = from + bestLength;
+
+            for (int i = from; i < to; i++) {
+                FrameData<S> frameData = currentDataSet.get(i);
+                int animationIndex = i % bestLength;
+
+                int frameDuration;
+                if (i + 1 < currentDataSet.size()) {
+                    frameDuration = currentDataSet.get(i + 1).recordedTimingMsOffset()
+                                    - frameData.recordedTimingMsOffset();
+                } else {
+                    if (i == 0) {
+                        frameDuration = 50;
+                    } else {
+                        frameDuration = currentDataSet.get(i).recordedTimingMsOffset()
+                                        - currentDataSet.get(i - 1).recordedTimingMsOffset();
+                    }
+                }
+
+                timingData.submit(entityID, animationIndex, frameDuration);
+            }
+        }
+
+        if (loopCount > 1) {
+            currentDataSet.subList(bestLength, currentDataSet.size()).clear();
+        }
+
+        List<Integer> newOffsets = new ArrayList<>();
+        S firstFrameData = currentDataSet.getFirst().sourceData();
+        for (int i = 0; i < currentDataSet.size(); i++) {
+            if (sourceDataMatches(currentDataSet.get(i).sourceData(), firstFrameData)) {
+                newOffsets.add(i);
+            }
+        }
+
+        long newHash = computePhaseOffsetsHash(newOffsets);
+        if (newHash != lastPhaseOffsetsHash) {
+            validPhaseOffsets.clear();
+            validPhaseOffsets.addAll(newOffsets);
+            lastPhaseOffsetsHash = newHash;
+            phaseOffsetIndex = 0;
+        }
+    }
+
+    private long computePhaseOffsetsHash(List<Integer> offsets) {
+        long hash = 1;
+        for (int offset : offsets) {
+            hash = hash * 31 + offset;
+        }
+        return hash;
+    }
+
+    public FrameData<S> getFrame(int index) {
+        if (validPhaseOffsets.isEmpty()) {
+            return currentDataSet.get(index);
+        }
+        int offset = validPhaseOffsets.get(phaseOffsetIndex);
+        return currentDataSet.get((index + offset) % currentDataSet.size());
+    }
+
+    public void cyclePhaseOffset(int delta) {
+        if (validPhaseOffsets.size() <= 1) {
+            return;
+        }
+
+        this.phaseOffsetIndex = (phaseOffsetIndex + delta + validPhaseOffsets.size()) % validPhaseOffsets.size();
+        this.currentIndex = 0;
+        this.currentFrame = getFrame(0);
+        this.lastUpdatedSourceData = null;
+    }
+
+    public List<Integer> getValidPhaseOffsets() {
+        return validPhaseOffsets;
+    }
+
+    public int getPhaseOffsetIndex() {
+        return phaseOffsetIndex;
+    }
 
     protected R getOrUpdateRenderable() {
         if (this.lastUpdatedSourceData == null || !this.sourceDataMatches(lastUpdatedSourceData, currentFrame.sourceData())) {
@@ -188,11 +236,13 @@ public abstract class FrameBasedRenderable<S, R extends Renderable<P>, P extends
 
         if (renderScreen.currentAnimationExportData == null && this.dataSourceSupplier.get().size() > lastFetchRawFrameCount) {
             boolean hadTimingDataBefore = timingData != null;
+            boolean hadRepeatingFirstTexturesBefore = validPhaseOffsets.size() >= 2;
 
             fetch();
 
             boolean hasTimingDataNow = timingData != null;
-            if (hadTimingDataBefore != hasTimingDataNow) {
+            boolean hasRepeatingFirstTexturesNow = validPhaseOffsets.size() >= 2;
+            if (hadTimingDataBefore != hasTimingDataNow || hadRepeatingFirstTexturesBefore != hasRepeatingFirstTexturesNow) {
                 renderScreen.guiRebuildScheduled = true;
             }
         }
@@ -215,7 +265,7 @@ public abstract class FrameBasedRenderable<S, R extends Renderable<P>, P extends
         this.currentIndex = 0;
         this.currentFrame = currentDataSet.getFirst();
         this.currentFrameTotalExportsSoFar = 0;
-        this.currentFrameTotalDuration = timingData.getTickTimingMinimized(currentIndex);
+        this.currentFrameTotalDuration = timingData.getTickTimingMinimized(currentIndex, this);
 
         GlobalProperties.get().exportFramerate.set(timingData.getFPS());
         GlobalProperties.get().exportFrames.set(timingData.getTotalTickDuration());
@@ -227,7 +277,7 @@ public abstract class FrameBasedRenderable<S, R extends Renderable<P>, P extends
         if (currentIndex + 1 >= this.currentDataSet.size()) {
             renderActive = false;
             currentIndex = 0;
-            currentFrame = this.currentDataSet.getFirst();
+            currentFrame = this.getFrame(0);
 
             // for the start button
             screen.guiRebuildScheduled = true;
@@ -235,9 +285,9 @@ public abstract class FrameBasedRenderable<S, R extends Renderable<P>, P extends
             this.saveFileData(screen);
         } else {
             this.currentIndex++;
-            this.currentFrame = this.currentDataSet.get(this.currentIndex);
+            this.currentFrame = this.getFrame(this.currentIndex);
             this.currentFrameTotalExportsSoFar = 0;
-            this.currentFrameTotalDuration = timingData.getTickTimingMinimized(currentIndex);
+            this.currentFrameTotalDuration = timingData.getTickTimingMinimized(currentIndex, this);
         }
     }
 

@@ -31,11 +31,11 @@ public class InterpolatedTimings {
         this.frameTimes.get(index).addMillisecondTiming(entityID, millisecondDuration);
     }
 
-    public int getTickTimingMinimized(int index) {
+    public int getTickTimingMinimized(int index, FrameBasedRenderable<?, ?, ?> renderable) {
         if (useCustomFrameTime.get() && customFrameTime != null) {
             return customFrameTime.get();
         } else {
-            return this.frameTimes.get(index).getAverageTickTime();
+            return this.getFrame(index, renderable).getAverageTickTime();
         }
     }
 
@@ -63,12 +63,21 @@ public class InterpolatedTimings {
         return 20;
     }
 
-    public String getTickValues() {
+    public String getTickValuesWithPossibleOffsetsApplied(FrameBasedRenderable<?, ?, ?> renderable) {
         List<String> values = new ArrayList<>();
-        for (FrameTime frameTime : frameTimes) {
+        for (int i = 0, frameTimesSize = frameTimes.size(); i < frameTimesSize; i++) {
+            FrameTime frameTime = this.getFrame(i, renderable);
             values.add(String.valueOf(frameTime.getAverageTickTime()));
         }
         return String.join(", ", values);
+    }
+
+    private FrameTime getFrame(int index, FrameBasedRenderable<?, ?, ?> renderable) {
+        if (renderable.getValidPhaseOffsets().isEmpty()) {
+            return frameTimes.get(index);
+        }
+        int offset = renderable.getValidPhaseOffsets().get(renderable.getPhaseOffsetIndex());
+        return frameTimes.get((index + offset) % frameTimes.size());
     }
 
     public void resetForEntity(UUID entityID) {

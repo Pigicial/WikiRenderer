@@ -56,7 +56,8 @@ public class ItemFrameBasedRenderable extends FrameBasedRenderable<TextureData, 
     @Override
     protected List<String> generateWikiTextFile(List<FrameData<TextureData>> currentDataSet) {
         List<String> hashes = new ArrayList<>();
-        for (FrameData<TextureData> frame : currentDataSet) {
+        for (int i = 0, currentDataSetSize = currentDataSet.size(); i < currentDataSetSize; i++) {
+            FrameData<TextureData> frame = this.getFrame(i);
             String hash = frame.sourceData().payload().textures().get(MinecraftProfileTexture.Type.SKIN).getHash();
             hashes.add(hash);
         }

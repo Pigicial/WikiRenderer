@@ -101,7 +101,7 @@ public class FrameBasedPropertyBundle<S, R extends Renderable<P>, P extends Prop
                 int amountOfLoops = timingData.getAmountOfLoops();
                 MutableComponent data = Translate.gui("ticks_amount_with_data",
                         timingData.getRawTotalTickDuration(),
-                        timingData.getTickValues(),
+                        timingData.getTickValuesWithPossibleOffsetsApplied(frameBasedRenderable),
                         amountOfLoops,
                         amountOfLoops == 1 ? "" : "s"
                 ).withStyle(ChatFormatting.GRAY);
@@ -126,6 +126,29 @@ public class FrameBasedPropertyBundle<S, R extends Renderable<P>, P extends Prop
         )).margins(Insets.vertical(7).withTop(4));
 
         container.child(new DynamicItemsListComponent<>(this.frameBasedRenderable));
+        if (frameBasedRenderable.getValidPhaseOffsets().size() > 1) {
+            WikiRendererUI.dynamicText(container, () -> Translate.gui(
+                    "multiple_first_frames_detected",
+                    frameBasedRenderable.getPhaseOffsetIndex() + 1,
+                    frameBasedRenderable.getValidPhaseOffsets().size()
+            )).margins(Insets.vertical(7));
+
+            try (WikiRendererUI.RowBuilder builder = WikiRendererUI.autoNewLineRow(container)) {
+                ButtonComponent prevOffsetButton = WikiRendererUI.button(Translate.gui("phase_offset_previous"), _ -> {
+                    frameBasedRenderable.cyclePhaseOffset(-1);
+                    screen.guiRebuildScheduled = true;
+                });
+                prevOffsetButton.margins(Insets.bottom(3));
+                builder.row.child(prevOffsetButton);
+
+                ButtonComponent nextOffsetButton = WikiRendererUI.button(Translate.gui("phase_offset_next"), _ -> {
+                    frameBasedRenderable.cyclePhaseOffset(1);
+                    screen.guiRebuildScheduled = true;
+                });
+                nextOffsetButton.margins(Insets.bottom(3));
+                builder.row.child(nextOffsetButton);
+            }
+        }
 
         if (renderable instanceof ItemFrameBasedRenderable) {
             WikiRendererUI.booleanControl(container, ITEM_EXPORT_PROFILE_DATA, "export_profile_data");
