@@ -53,7 +53,9 @@
   "gui.wikirenderer.isometric": "Isometric",
 
   "gui.wikirenderer.item_options": "§nItem Options",
-  "gui.wikirenderer.force_enchanted": "Force Enchantment Glint",
+  "gui.wikirenderer.override_enchantment_glints": "Override Enchantment Glints",
+  "gui.wikirenderer.override_enchantment_glints.tooltip": "Force all items to either be enchanted or unenchanted (per the setting that appears when selecting this)",
+  "gui.wikirenderer.force_enchanted": "Show Glints",
   "gui.wikirenderer.force_enchanted.tooltip": "Forces the enchantment glint to show on items that support it.",
   "gui.wikirenderer.override_dye_color": "Override Dye Color",
   "gui.wikirenderer.override_dye_color.tooltip": "Overrides the dye color on dyeable items, like leather armor.",

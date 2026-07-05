@@ -12,8 +12,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class ItemStackMixin {
     @Inject(method = "hasFoil", at = @At("HEAD"), cancellable = true)
     private void onHasFoil(CallbackInfoReturnable<Boolean> cir) {
-        if (WikiRenderer.overrideGlint && ItemRenderablePropertyBundle.INSTANCE.forceEnchantmentGlints.get()) {
-            cir.setReturnValue(true);
+        if (WikiRenderer.overrideGlint && ItemRenderablePropertyBundle.INSTANCE.overrideEnchantmentGlints.get()) {
+            cir.setReturnValue(ItemRenderablePropertyBundle.INSTANCE.forceEnchantmentGlints.get());
         }
     }
 }

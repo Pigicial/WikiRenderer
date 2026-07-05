@@ -92,7 +92,7 @@ public class ItemRenderable extends ItemBasedRenderable<ItemRenderablePropertyBu
     @Override
     public void prepare() {
         ItemRenderablePropertyBundle properties = getProperties();
-        if (properties.forceEnchantmentGlints.get()) {
+        if (properties.overrideEnchantmentGlints.get()) {
             WikiRenderer.overrideGlint = true;
         }
 

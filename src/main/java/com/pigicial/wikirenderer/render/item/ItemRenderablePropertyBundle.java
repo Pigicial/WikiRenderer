@@ -31,6 +31,7 @@ public class ItemRenderablePropertyBundle extends DefaultCroppablePropertyBundle
     public static final ItemRenderablePropertyBundle INSTANCE = WikiRendererConfigs.loadOrDefault(new ItemRenderablePropertyBundle());
 
     public final Property<Boolean> allowScalingWithMouse = Property.of(false);
+    public final Property<Boolean> overrideEnchantmentGlints = Property.of(false);
     public final Property<Boolean> forceEnchantmentGlints = Property.of(false);
     public final Property<Boolean> overrideDyeColors = Property.of(false);
     public int dyeColorOverride = 0;
@@ -124,7 +125,8 @@ public class ItemRenderablePropertyBundle extends DefaultCroppablePropertyBundle
         }
 
         if (!stack.is(Items.PLAYER_HEAD)) {
-            WikiRendererUI.booleanControl(container, forceEnchantmentGlints, "force_enchanted");
+            WikiRendererUI.booleanControl(container, overrideEnchantmentGlints, "override_enchantment_glints");
+            WikiRendererUI.conditionalBooleanControl(container, forceEnchantmentGlints, "force_enchanted", overrideEnchantmentGlints::get);
         }
 
         if (DYEABLE_ITEMS.contains(stack.getItem())) {
