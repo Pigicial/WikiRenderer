@@ -250,4 +250,9 @@ public class BatchRenderable<R extends Renderable<?>> implements Renderable<Batc
             return false;
         }
     }
+
+    @Override
+    public Map<String, String> getPngTextMetadata() {
+        return this.currentDelegate.getPngTextMetadata();
+    }
 }
