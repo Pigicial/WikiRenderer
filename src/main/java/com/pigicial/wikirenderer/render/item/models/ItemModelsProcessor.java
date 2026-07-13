@@ -1,8 +1,8 @@
 package com.pigicial.wikirenderer.render.item.models;
 
+import com.pigicial.wikirenderer.mixin.access.BlockModelWrapperAccessor;
 import com.pigicial.wikirenderer.mixin.access.CompositeModelAccessor;
 import com.pigicial.wikirenderer.mixin.access.ConditionalItemModelAccessor;
-import com.pigicial.wikirenderer.mixin.access.CuboidItemModelWrapperAccessor;
 import com.pigicial.wikirenderer.mixin.access.RangeSelectItemModelAccessor;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.minecraft.client.Minecraft;
@@ -127,9 +127,9 @@ public class ItemModelsProcessor {
     }
 
     private static String getLayerKey(ItemModel model) {
-        if (model instanceof CuboidItemModelWrapper wcuboidItemModelWrapper) {
-            ModelRenderProperties props = ((CuboidItemModelWrapperAccessor) wcuboidItemModelWrapper).wikirenderer$getProperties();
-            return props.particleMaterial().sprite().contents().name().toString();
+        if (model instanceof BlockModelWrapper blockItemModelWrapper) {
+            ModelRenderProperties props = ((BlockModelWrapperAccessor) blockItemModelWrapper).wikirenderer$getProperties();
+            return props.particleIcon().contents().name().toString();
         }
         return String.valueOf(System.identityHashCode(model));
     }
