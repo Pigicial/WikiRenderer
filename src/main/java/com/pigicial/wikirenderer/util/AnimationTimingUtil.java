@@ -2,14 +2,20 @@ package com.pigicial.wikirenderer.util;
 
 import com.pigicial.wikirenderer.mixin.access.ItemStackRenderStateAccessor;
 import com.pigicial.wikirenderer.mixin.access.SpriteContentsAccessor;
+import com.pigicial.wikirenderer.property.IntProperty;
+import com.pigicial.wikirenderer.render.item.ItemRenderable;
+import com.pigicial.wikirenderer.render.item.ItemRenderablePropertyBundle;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.block.model.SimpleModelWrapper;
+import net.minecraft.client.renderer.item.ItemModel;
+import net.minecraft.client.renderer.item.ItemModelResolver;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.RandomSource;
@@ -24,6 +30,40 @@ import java.util.List;
 public class AnimationTimingUtil {
 
     private static final RandomSource RANDOM = RandomSource.create();
+
+    public static void scanTicksToFullyAnimateItem(ItemRenderable renderable, List<Integer> animationTimings) {
+        ItemStack stack = renderable.stack;
+
+        ItemModelResolver itemModelResolver = Minecraft.getInstance().getItemModelResolver();
+        Identifier modelId = stack.get(DataComponents.ITEM_MODEL);
+        ModelManager modelManager = Minecraft.getInstance().getModelManager();
+
+        List<ItemModel> models = renderable.getModels();
+        IntProperty currentModelIndex = renderable.getCurrentModelIndex();
+
+        ItemStackRenderState renderState = new ItemStackRenderState();
+        if (ItemRenderablePropertyBundle.INSTANCE.useModelOverrides.get() && modelId != null && models != null && !models.isEmpty()) {
+            renderState.setOversizedInGui(modelManager.getItemProperties(modelId).oversizedInGui());
+
+            ItemModel itemModel = models.get(currentModelIndex == null ? 0 : Math.min(currentModelIndex.get(), models.size()) - 1);
+            itemModel.update(renderState, stack, itemModelResolver, ItemDisplayContext.GUI, Minecraft.getInstance().level, null, 0);
+        } else {
+            itemModelResolver.appendItemLayers(
+                    renderState,
+                    stack,
+                    ItemDisplayContext.GUI,
+                    Minecraft.getInstance().level,
+                    null,
+                    0
+            );
+        }
+
+        for (ItemStackRenderState.LayerRenderState layer : ((ItemStackRenderStateAccessor) renderState).wikirenderer$getLayers()) {
+            fillTimings(layer.prepareQuadList(), animationTimings);
+        }
+
+        renderState.clear();
+    }
 
     public static void scanTicksToFullyAnimateItem(ItemStack itemStack, List<Integer> animationTimings) {
         Identifier modelIdentifier = itemStack.get(DataComponents.ITEM_MODEL);
