@@ -10,7 +10,6 @@ import net.minecraft.client.renderer.item.*;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -28,10 +27,15 @@ public class ItemModelsProcessor {
         ItemModel itemModel = Minecraft.getInstance().getModelManager().getItemModel(modelIdentifier);
         Set<ItemModel> itemModelsSet = flattenModel(itemModel);
 
-        return new ArrayList<>(itemModelsSet);
+        return itemModelsSet == null ? null : new ArrayList<>(itemModelsSet);
     }
 
-    private static Set<ItemModel> flattenModel(@NotNull ItemModel model) {
+    @Nullable
+    private static Set<ItemModel> flattenModel(@Nullable ItemModel model) {
+        if (model == null) {
+            return null;
+        }
+
         Set<ItemModel> modelsToFlatten = new LinkedHashSet<>();
         switch (model) {
             case SelectItemModel<?> selectItemModel -> {
@@ -62,21 +66,25 @@ public class ItemModelsProcessor {
                 combinations.add(new ArrayList<>());
 
                 for (ItemModel child : children) {
-                    Set<ItemModel> childOutcomes = dedup(flattenModel(child));
-                    Set<List<ItemModel>> newCombinations = new LinkedHashSet<>();
+                    Set<ItemModel> rawChildOutcomes = flattenModel(child);
+                    if (rawChildOutcomes != null) {
+                        Set<ItemModel> childOutcomes = dedup(rawChildOutcomes);
+                        Set<List<ItemModel>> newCombinations = new LinkedHashSet<>();
 
-                    for (List<ItemModel> existing : combinations) {
-                        for (ItemModel childOutcome : childOutcomes) {
-                            List<ItemModel> combined = new ArrayList<>(existing);
-                            if (childOutcome instanceof CompositeModel c) {
-                                combined.addAll(((CompositeModelAccessor) c).wikirenderer$getModels());
-                            } else {
-                                combined.add(childOutcome);
+                        for (List<ItemModel> existing : combinations) {
+                            for (ItemModel childOutcome : childOutcomes) {
+                                List<ItemModel> combined = new ArrayList<>(existing);
+                                if (childOutcome instanceof CompositeModel c) {
+                                    combined.addAll(((CompositeModelAccessor) c).wikirenderer$getModels());
+                                } else {
+                                    combined.add(childOutcome);
+                                }
+                                newCombinations.add(combined);
                             }
-                            newCombinations.add(combined);
                         }
+                        combinations = newCombinations;
                     }
-                    combinations = newCombinations;
+
                 }
 
                 return combinations.stream().map(CompositeModel::new).collect(Collectors.toSet());
@@ -88,7 +96,10 @@ public class ItemModelsProcessor {
 
         Set<ItemModel> flattenedModels = new LinkedHashSet<>();
         for (ItemModel itemModel : modelsToFlatten) {
-            flattenedModels.addAll(flattenModel(itemModel));
+            Set<ItemModel> flattened = flattenModel(itemModel);
+            if (flattened != null) {
+                flattenedModels.addAll(flattened);
+            }
         }
         flattenedModels = dedup(flattenedModels);
 

@@ -66,6 +66,15 @@ public class BatchPropertyBundle extends DefaultCroppablePropertyBundle {
         }
     }
 
+    @Override
+    public void modifyScale(double amount) {
+        if (this.actualProperties instanceof DefaultPropertyBundle delegate) {
+            delegate.modifyScale(amount);
+        } else {
+            super.modifyScale(amount);
+        }
+    }
+
     public PropertyBundle getActualProperties() {
         return actualProperties;
     }
