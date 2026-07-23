@@ -4,6 +4,7 @@ import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.pigicial.wikirenderer.WikiRenderer;
 import com.pigicial.wikirenderer.mixin.access.GameRendererAccessor;
 import com.pigicial.wikirenderer.mixin.access.LevelRendererAccessor;
 import com.pigicial.wikirenderer.mixin.access.LightmapRenderStateExtractorAccessor;
@@ -23,7 +24,6 @@ public abstract class DefaultRenderable<P extends DefaultPropertyBundle> impleme
 
     protected static final int LIGHTING_UBO_SIZE = new Std140SizeCalculator().putVec3().putVec3().get();
 
-    protected Lightmap lightmap = new Lightmap();
     protected GpuBuffer lightingBuffer;
     protected String customFileName = null;
 
@@ -78,11 +78,10 @@ public abstract class DefaultRenderable<P extends DefaultPropertyBundle> impleme
         LightmapRenderState renderState = new LightmapRenderState();
         extractor.extract(renderState, 1.0F);
 
-        // todo this could probably be better
-        if (this.lightmap == null) {
-            this.lightmap = new Lightmap();
+        if (WikiRenderer.alternateLightmap == null) {
+            WikiRenderer.alternateLightmap = new Lightmap();
         }
-        this.lightmap.render(renderState);
+        WikiRenderer.alternateLightmap.render(renderState);
     }
 
     @Override
@@ -103,9 +102,9 @@ public abstract class DefaultRenderable<P extends DefaultPropertyBundle> impleme
             this.updateWorldLightmap();
         }
 
-        if (this.lightmap != null) {
-            this.lightmap.close();
-            this.lightmap = null;
+        if (WikiRenderer.alternateLightmap != null) {
+            WikiRenderer.alternateLightmap.close();
+            WikiRenderer.alternateLightmap = null;
         }
     }
 

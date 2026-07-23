@@ -1,6 +1,7 @@
 package com.pigicial.wikirenderer.mixin;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import com.pigicial.wikirenderer.WikiRenderer;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.renderer.GameRenderer;
@@ -17,6 +18,13 @@ public class GameRendererMixin {
     private void overrideMainRenderTarget(CallbackInfoReturnable<RenderTarget> cir) {
         if (WikiRenderer.mainTargetOverride != null) {
             cir.setReturnValue(WikiRenderer.mainTargetOverride);
+        }
+    }
+
+    @Inject(method = "lightmap", at = @At("HEAD"), cancellable = true)
+    private void overrideLightmap(CallbackInfoReturnable<GpuTextureView> cir) {
+        if (WikiRenderer.inAreaRenderDraw && WikiRenderer.alternateLightmap != null) {
+            cir.setReturnValue(WikiRenderer.alternateLightmap.getTextureView());
         }
     }
 
