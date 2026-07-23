@@ -8,6 +8,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
 import com.mojang.authlib.yggdrasil.response.MinecraftTexturesPayload;
+import com.pigicial.wikirenderer.WikiRenderer;
 import com.pigicial.wikirenderer.util.NullSafeUUIDTypeAdapter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.PlayerSkinRenderCache;
@@ -43,21 +44,26 @@ public class PlayerTextureUtils {
 
     @Nullable
     public static TextureData getTextureDataFromGameProfile(GameProfile gameProfile) {
-        Collection<Property> textures = gameProfile.properties().get("textures");
-        if (textures.isEmpty()) {
-            return null;
-        }
-
-        String skin = textures.iterator().next().value();
-        byte[] byteArray;
         try {
-            byteArray = Base64.getDecoder().decode(skin);
-        } catch (IllegalArgumentException ignored) {
+            Collection<Property> textures = gameProfile.properties().get("textures");
+            if (textures.isEmpty()) {
+                return null;
+            }
+
+            String skin = textures.iterator().next().value();
+            byte[] byteArray;
+            try {
+                byteArray = Base64.getDecoder().decode(skin);
+            } catch (IllegalArgumentException ignored) {
+                return null;
+            }
+            String decodedSkin = new String(byteArray, StandardCharsets.UTF_8);
+
+            return new TextureData(GSON.fromJson(decodedSkin, MinecraftTexturesPayload.class), gameProfile);
+        } catch (Exception e) {
+            WikiRenderer.LOGGER.error("Error when grabbing texture data from game profile", e);
             return null;
         }
-        String decodedSkin = new String(byteArray, StandardCharsets.UTF_8);
-
-        return new TextureData(GSON.fromJson(decodedSkin, MinecraftTexturesPayload.class), gameProfile);
     }
 
     public static ItemStack createPlayerHead(GameProfile gameProfile) {
