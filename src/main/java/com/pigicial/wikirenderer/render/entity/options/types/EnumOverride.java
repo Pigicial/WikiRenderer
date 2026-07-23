@@ -1,11 +1,11 @@
 package com.pigicial.wikirenderer.render.entity.options.types;
 
-import com.pigicial.wikirenderer.components.FullWidthCollapsibleContainer;
-import com.pigicial.wikirenderer.components.SearchableEntityListComponent;
+import com.pigicial.wikirenderer.screen.components.FullWidthCollapsibleContainer;
+import com.pigicial.wikirenderer.screen.components.SearchableEntityListComponent;
+import com.pigicial.wikirenderer.screen.owo.container.FlowLayout;
+import com.pigicial.wikirenderer.screen.owo.core.Sizing;
+import com.pigicial.wikirenderer.screen.owo.core.UIComponent;
 import com.pigicial.wikirenderer.util.Translate;
-import io.wispforest.owo.ui.container.FlowLayout;
-import io.wispforest.owo.ui.core.Sizing;
-import io.wispforest.owo.ui.core.UIComponent;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.network.chat.Component;

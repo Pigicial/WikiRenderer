@@ -1,8 +1,8 @@
 package com.pigicial.wikirenderer.render.entity.options.types;
 
-import com.pigicial.wikirenderer.components.MiniEditBoxComponent;
-import io.wispforest.owo.ui.container.FlowLayout;
-import io.wispforest.owo.ui.core.Sizing;
+import com.pigicial.wikirenderer.screen.components.MiniEditBoxComponent;
+import com.pigicial.wikirenderer.screen.owo.container.FlowLayout;
+import com.pigicial.wikirenderer.screen.owo.core.Sizing;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import org.jetbrains.annotations.UnknownNullability;
 

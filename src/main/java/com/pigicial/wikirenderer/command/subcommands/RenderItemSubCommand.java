@@ -2,7 +2,7 @@ package com.pigicial.wikirenderer.command.subcommands;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTextures;
-import com.mojang.authlib.yggdrasil.response.MinecraftTexturesPayload;
+import com.mojang.authlib.services.response.MinecraftTexturesPayload;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;

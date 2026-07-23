@@ -2,17 +2,17 @@ package com.pigicial.wikirenderer.render.entity.options.types;
 
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.pigicial.wikirenderer.components.FullWidthCollapsibleContainer;
-import com.pigicial.wikirenderer.components.MiniEditBoxComponent;
-import com.pigicial.wikirenderer.components.SearchableEntityListComponent;
+import com.pigicial.wikirenderer.screen.WikiRendererUI;
+import com.pigicial.wikirenderer.screen.components.FullWidthCollapsibleContainer;
+import com.pigicial.wikirenderer.screen.components.MiniEditBoxComponent;
+import com.pigicial.wikirenderer.screen.components.SearchableEntityListComponent;
+import com.pigicial.wikirenderer.screen.owo.container.FlowLayout;
+import com.pigicial.wikirenderer.screen.owo.container.UIContainers;
+import com.pigicial.wikirenderer.screen.owo.core.Insets;
+import com.pigicial.wikirenderer.screen.owo.core.Sizing;
+import com.pigicial.wikirenderer.screen.owo.core.UIComponent;
+import com.pigicial.wikirenderer.screen.owo.core.VerticalAlignment;
 import com.pigicial.wikirenderer.util.Translate;
-import io.wispforest.owo.ui.component.UIComponents;
-import io.wispforest.owo.ui.container.FlowLayout;
-import io.wispforest.owo.ui.container.UIContainers;
-import io.wispforest.owo.ui.core.Insets;
-import io.wispforest.owo.ui.core.Sizing;
-import io.wispforest.owo.ui.core.UIComponent;
-import io.wispforest.owo.ui.core.VerticalAlignment;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.commands.arguments.blocks.BlockStateParser;
@@ -59,7 +59,7 @@ public class BlockStateOverride<S extends EntityRenderState> extends OptionalOve
         blockInputRow.verticalAlignment(VerticalAlignment.CENTER);
         blockInputRow.margins(Insets.top(5));
 
-        blockInputRow.child(UIComponents.label(Translate.gui("block")).margins(Insets.right(5)));
+        blockInputRow.child(WikiRendererUI.label(Translate.gui("block")).margins(Insets.right(5)));
         blockInputRow.child(this.buildBlockNameComponent());
         layout.child(blockInputRow);
 
@@ -75,7 +75,7 @@ public class BlockStateOverride<S extends EntityRenderState> extends OptionalOve
         editBox.onChanged().subscribe(text -> {
             this.blockName = text;
             try {
-                vanillaLookup = vanillaLookup == null ? VanillaRegistries.createLookup() : vanillaLookup;
+                vanillaLookup = vanillaLookup == null ? VanillaRegistries.createWorldLookup() : vanillaLookup;
                 BlockStateParser.BlockResult result = BlockStateParser.parseForBlock(vanillaLookup.lookupOrThrow(Registries.BLOCK), new StringReader(text), false);
                 this.setValue(result.blockState());
             } catch (CommandSyntaxException e) {
@@ -100,7 +100,7 @@ public class BlockStateOverride<S extends EntityRenderState> extends OptionalOve
     }
 
     private <T extends Comparable<T>> UIComponent buildPropertyContainer(Property<T> property) {
-        UIComponent headerLabel = UIComponents.label(Component.literal(toDisplayName(property.getName())));
+        UIComponent headerLabel = WikiRendererUI.label(Component.literal(toDisplayName(property.getName())));
 
         FullWidthCollapsibleContainer propContainer = new FullWidthCollapsibleContainer(headerLabel, () -> {
             BlockState value = getValue();

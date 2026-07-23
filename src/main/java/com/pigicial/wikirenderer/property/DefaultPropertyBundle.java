@@ -6,10 +6,10 @@ import com.pigicial.wikirenderer.render.Renderable;
 import com.pigicial.wikirenderer.render.export.animation.AnimationHandler;
 import com.pigicial.wikirenderer.screen.RenderScreen;
 import com.pigicial.wikirenderer.screen.WikiRendererUI;
+import com.pigicial.wikirenderer.screen.owo.component.ButtonComponent;
+import com.pigicial.wikirenderer.screen.owo.container.FlowLayout;
+import com.pigicial.wikirenderer.screen.owo.core.Insets;
 import com.pigicial.wikirenderer.util.Translate;
-import io.wispforest.owo.ui.component.ButtonComponent;
-import io.wispforest.owo.ui.container.FlowLayout;
-import io.wispforest.owo.ui.core.Insets;
 import net.minecraft.client.Minecraft;
 import org.joml.Matrix4fStack;
 

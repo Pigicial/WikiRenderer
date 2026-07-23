@@ -5,8 +5,8 @@ import com.pigicial.wikirenderer.render.entity.EntityPropertyBundle;
 import com.pigicial.wikirenderer.render.entity.EntityRenderable;
 import com.pigicial.wikirenderer.render.entity.player.ProfileFetchMode;
 import com.pigicial.wikirenderer.render.entity.player.RenderablePlayerEntity;
-import io.wispforest.owo.ui.component.ItemComponent;
-import io.wispforest.owo.ui.component.UIComponents;
+import com.pigicial.wikirenderer.screen.WikiRendererUI;
+import com.pigicial.wikirenderer.screen.owo.component.ItemComponent;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.Item;
@@ -25,7 +25,7 @@ public class DyedArmorFrameBasedRenderable extends FrameBasedRenderable<DyedArmo
 
     @Override
     public ItemComponent createItemComponentForPreview(FrameData<DyedArmorColorData> frameData) {
-        return UIComponents.item(this.createItem(Items.LEATHER_HELMET, frameData.sourceData().helmetColor()));
+        return WikiRendererUI.item(this.createItem(Items.LEATHER_HELMET, frameData.sourceData().helmetColor()));
     }
 
     @Override

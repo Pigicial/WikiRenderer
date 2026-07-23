@@ -3,7 +3,7 @@ package com.pigicial.wikirenderer.render.entity;
 import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.pigicial.wikirenderer.WikiRenderer;
-import com.pigicial.wikirenderer.components.EntityTypeSpecificPropertiesComponent;
+import com.pigicial.wikirenderer.screen.components.EntityTypeSpecificPropertiesComponent;
 import com.pigicial.wikirenderer.mixin.access.ClientMannequinAccessor;
 import com.pigicial.wikirenderer.mixin.access.ItemStackRenderStateAccessor;
 import com.pigicial.wikirenderer.mixin.access.LevelRendererAccessor;

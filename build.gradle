@@ -68,10 +68,6 @@ dependencies {
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
     implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    //implementation "io.wispforest:exo:${project.exo_version}"
-    implementation "io.wispforest:owo-lib:${project.owo_version}"
-    include "io.wispforest:owo-sentinel:${project.owo_version}"
-
     runtimeOnly("me.djtheredstoner:DevAuth-fabric:${project.devauth_version}")
     compileOnly "maven.modrinth:iris:${project.iris_version}"
     compileOnly "maven.modrinth:entityculling:${project.entity_culling_version}"

@@ -1,18 +1,19 @@
 package com.pigicial.wikirenderer.mixin.entity;
 
-import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.FilterMode;
-import com.mojang.blaze3d.textures.GpuSampler;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.textures.FilterMode;
+import com.mojang.renderpearl.api.textures.GpuSampler;
 import com.pigicial.wikirenderer.WikiRenderer;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.rendertype.RenderSetup;
-import net.minecraft.client.renderer.texture.AbstractTexture;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
+
+import java.util.function.Supplier;
 
 @Mixin(RenderSetup.class)
 public abstract class RenderSetupMixin {
@@ -24,14 +25,14 @@ public abstract class RenderSetupMixin {
     // Fixes player skins sometimes having an extra line on the top (only appears at certain scales/rotations/positions)
     @Redirect(
             method = "prepareTextures",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/AbstractTexture;getSampler()Lcom/mojang/blaze3d/textures/GpuSampler;")
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/rendertype/RenderSetup$TextureBinding;sampler()Ljava/util/function/Supplier;")
     )
-    private GpuSampler wikirenderer$overrideSampler(AbstractTexture instance) {
-        GpuSampler original = instance.getSampler();
+    private Supplier<GpuSampler> wikirenderer$overrideSampler(RenderSetup.TextureBinding instance) {
+        GpuSampler original = instance.sampler().get();
         if (WikiRenderer.inEntityDraw && original == RenderSystem.getSamplerCache().getRepeat(FilterMode.NEAREST) && pipeline != RenderPipelines.ENERGY_SWIRL) {
-            return RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST);
+            return () -> RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST);
         }
 
-        return original;
+        return instance.sampler();
     }
 }

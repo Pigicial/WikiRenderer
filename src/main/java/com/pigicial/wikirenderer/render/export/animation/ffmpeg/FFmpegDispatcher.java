@@ -2,10 +2,10 @@ package com.pigicial.wikirenderer.render.export.animation.ffmpeg;
 
 import com.pigicial.wikirenderer.WikiRenderer;
 import com.pigicial.wikirenderer.property.GlobalProperties;
-import com.pigicial.wikirenderer.render.export.animation.AnimationFormat;
-import com.pigicial.wikirenderer.render.export.animation.AnimationHandler;
 import com.pigicial.wikirenderer.render.export.ExportPathSpec;
 import com.pigicial.wikirenderer.render.export.FileIO;
+import com.pigicial.wikirenderer.render.export.animation.AnimationFormat;
+import com.pigicial.wikirenderer.render.export.animation.AnimationHandler;
 import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
 

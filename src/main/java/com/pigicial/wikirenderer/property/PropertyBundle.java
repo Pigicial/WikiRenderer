@@ -9,13 +9,12 @@ import com.pigicial.wikirenderer.render.export.RenderableDispatcher;
 import com.pigicial.wikirenderer.render.particle.ParticleRendererAndLooper;
 import com.pigicial.wikirenderer.screen.RenderScreen;
 import com.pigicial.wikirenderer.screen.WikiRendererUI;
+import com.pigicial.wikirenderer.screen.owo.component.TextBoxComponent;
+import com.pigicial.wikirenderer.screen.owo.container.FlowLayout;
+import com.pigicial.wikirenderer.screen.owo.core.Sizing;
 import com.pigicial.wikirenderer.util.ClipboardUtil;
 import com.pigicial.wikirenderer.util.ImageTransferable;
 import com.pigicial.wikirenderer.util.Translate;
-import io.wispforest.owo.ui.component.TextBoxComponent;
-import io.wispforest.owo.ui.component.UIComponents;
-import io.wispforest.owo.ui.container.FlowLayout;
-import io.wispforest.owo.ui.core.Sizing;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Util;
@@ -64,10 +63,10 @@ public interface PropertyBundle {
         WikiRendererUI.booleanControl(container, globalProperties.overwriteLatest, "overwrite_latest");
 
         try (WikiRendererUI.RowBuilder builder = WikiRendererUI.autoNewLineRow(container)) {
-            screen.exportButton = UIComponents.button(Translate.gui("export"), _ -> screen.captureScheduled = true);
+            screen.exportButton = WikiRendererUI.button(Translate.gui("export"), _ -> screen.captureScheduled = true);
             builder.row.child(screen.exportButton);
 
-            builder.row.child(UIComponents.button(Translate.gui("open_folder"), _ -> {
+            builder.row.child(WikiRendererUI.button(Translate.gui("open_folder"), _ -> {
                 ExportPathSpec defaultExportPath = renderable.getExportPath();
                 ExportPathSpec exportPath = defaultExportPath.differentFileName(renderable.getCustomFileName());
                 File file = exportPath.resolveOffset().toFile();
@@ -78,7 +77,7 @@ public interface PropertyBundle {
             }));
 
             if (ClipboardUtil.hasImageClipboardAccess()) {
-                builder.row.child(UIComponents.button(Translate.gui("export_to_clipboard"), _ -> {
+                builder.row.child(WikiRendererUI.button(Translate.gui("export_to_clipboard"), _ -> {
                     screen.notify(Translate.gui("copied_to_clipboard"));
 
                     float tickDelta = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false);

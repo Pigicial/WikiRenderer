@@ -1,18 +1,12 @@
 package com.pigicial.wikirenderer.mixin.world.particle;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.pigicial.wikirenderer.WikiRenderer;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.feature.QuadParticleFeatureRenderer;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(value = QuadParticleFeatureRenderer.class, priority = 2000)
 public class QuadParticleFeatureRendererMixin {
 
+    /*
     @WrapOperation(
             method = "executeGroup",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;mainRenderTarget()Lcom/mojang/blaze3d/pipeline/RenderTarget;")
@@ -34,4 +28,5 @@ public class QuadParticleFeatureRendererMixin {
         }
         return original.call(instance);
     }
+     */
 }

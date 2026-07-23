@@ -1,12 +1,11 @@
 package com.pigicial.wikirenderer.screen;
 
 import com.pigicial.wikirenderer.render.batch.ItemBatchRenderTask;
+import com.pigicial.wikirenderer.screen.owo.base.BaseOwoScreen;
+import com.pigicial.wikirenderer.screen.owo.container.FlowLayout;
+import com.pigicial.wikirenderer.screen.owo.container.UIContainers;
+import com.pigicial.wikirenderer.screen.owo.core.*;
 import com.pigicial.wikirenderer.util.Translate;
-import io.wispforest.owo.ui.base.BaseOwoScreen;
-import io.wispforest.owo.ui.component.UIComponents;
-import io.wispforest.owo.ui.container.FlowLayout;
-import io.wispforest.owo.ui.container.UIContainers;
-import io.wispforest.owo.ui.core.*;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -37,25 +36,25 @@ public class SelectRenderTaskScreen extends BaseOwoScreen<FlowLayout> {
         FlowLayout mainPanel = UIContainers.verticalFlow(Sizing.content(), Sizing.content());
         mainPanel.surface(Surface.PANEL).padding(Insets.of(5)).horizontalAlignment(HorizontalAlignment.CENTER);
 
-        mainPanel.child(UIComponents.label(Translate.gui("select_batch_operation")).shadow(true).margins(Insets.of(5).withBottom(10)));
+        mainPanel.child(WikiRendererUI.label(Translate.gui("select_batch_operation")).shadow(true).margins(Insets.of(5).withBottom(10)));
 
         FlowLayout contentPanel = UIContainers.horizontalFlow(Sizing.content(), Sizing.content());
         contentPanel.verticalAlignment(VerticalAlignment.CENTER);
 
         contentPanel.child(UIContainers.verticalFlow(Sizing.content(), Sizing.content())
-                .child(UIComponents.button(Translate.gui("select_item_batch"), _ -> {
+                .child(WikiRendererUI.button(Translate.gui("select_item_batch"), _ -> {
                     ItemBatchRenderTask.BATCH_ITEM.action.accept("inventory", this.items);
                     this.onClose();
                 }).horizontalSizing(Sizing.fixed(80)).margins(Insets.bottom(5)))
-                .child(UIComponents.button(Translate.gui("select_block_batch"), _ -> {
+                .child(WikiRendererUI.button(Translate.gui("select_block_batch"), _ -> {
                     ItemBatchRenderTask.BATCH_BLOCK.action.accept("inventory", this.items);
                     this.onClose();
                 }).horizontalSizing(Sizing.fixed(80)).margins(Insets.bottom(5)))
-                .child(UIComponents.button(Translate.gui("select_tooltip_batch"), _ -> {
+                .child(WikiRendererUI.button(Translate.gui("select_tooltip_batch"), _ -> {
                     ItemBatchRenderTask.BATCH_TOOLTIP.action.accept("inventory", this.items);
                     this.onClose();
                 }).horizontalSizing(Sizing.fixed(80)).margins(Insets.bottom(5)))
-                .child(UIComponents.button(Translate.gui("select_atlas"), _ -> {
+                .child(WikiRendererUI.button(Translate.gui("select_atlas"), _ -> {
                     ItemBatchRenderTask.ITEM_ATLAS.action.accept("inventory", this.items);
                     this.onClose();
                 }).horizontalSizing(Sizing.fixed(80)))
@@ -64,7 +63,7 @@ public class SelectRenderTaskScreen extends BaseOwoScreen<FlowLayout> {
 
         FlowLayout itemPreviewPanel = UIContainers.verticalFlow(Sizing.content(), Sizing.content());
 
-        itemPreviewPanel.child(UIComponents.label(Translate.gui("render_task_size", this.items.size())).margins(Insets.of(7)))
+        itemPreviewPanel.child(WikiRendererUI.label(Translate.gui("render_task_size", this.items.size())).margins(Insets.of(7)))
                 .horizontalAlignment(HorizontalAlignment.CENTER).padding(Insets.of(3))
                 .surface(Surface.flat(0x77000000).and(Surface.outline(0x77000000)))
                 .margins(Insets.left(10));
@@ -80,7 +79,7 @@ public class SelectRenderTaskScreen extends BaseOwoScreen<FlowLayout> {
                 int index = row * 9 + column;
                 if (index >= itemList.size()) break;
 
-                rowContainer.child(UIComponents.item(itemList.get(index)));
+                rowContainer.child(WikiRendererUI.item(itemList.get(index)));
             }
 
             itemContainer.child(rowContainer);

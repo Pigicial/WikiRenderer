@@ -1,8 +1,8 @@
 package com.pigicial.wikirenderer.property;
 
 import com.pigicial.wikirenderer.property.config.WikiRendererConfigs;
-import com.pigicial.wikirenderer.render.export.animation.ffmpeg.FFmpegAnimationHandlingMode;
 import com.pigicial.wikirenderer.render.export.animation.AnimationFormat;
+import com.pigicial.wikirenderer.render.export.animation.ffmpeg.FFmpegAnimationHandlingMode;
 
 public class GlobalProperties implements SerializablePropertyBundle {
 

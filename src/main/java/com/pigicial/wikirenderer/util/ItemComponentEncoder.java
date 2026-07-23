@@ -1,6 +1,7 @@
 package com.pigicial.wikirenderer.util;
 
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -30,23 +31,27 @@ public class ItemComponentEncoder {
         RegistryOps<Tag> registryOps = registries.createSerializationContext(NbtOps.INSTANCE);
         List<String> parts = new ArrayList<>();
 
-        patch.entrySet().forEach(entry -> {
-            DataComponentType<?> type = entry.getKey();
+        DataComponentPatch.SplitResult split = patch.split();
+
+        split.added().stream().forEach(typed -> {
+            DataComponentType<?> type = typed.type();
             Optional<ResourceKey<DataComponentType<?>>> key = BuiltInRegistries.DATA_COMPONENT_TYPE.getResourceKey(type);
             if (key.isEmpty()) {
                 return;
             }
-
             String typeId = key.get().identifier().toString();
 
-            Optional<?> possibleComponent = entry.getValue();
-            if (possibleComponent.isEmpty()) {
-                // intentionally removed component
-                parts.add("!" + typeId);
-            } else {
-                encodeComponent(type, possibleComponent.get(), registryOps)
-                        .ifPresent(tag -> parts.add(typeId + "=" + tag));
+            encodeComponent(type, typed.value(), registryOps)
+                    .ifPresent(tag -> parts.add(typeId + "=" + tag));
+        });
+
+        split.removed().forEach(type -> {
+            Optional<ResourceKey<DataComponentType<?>>> key = BuiltInRegistries.DATA_COMPONENT_TYPE.getResourceKey(type);
+            if (key.isEmpty()) {
+                return;
             }
+            String typeId = key.get().identifier().toString();
+            parts.add("!" + typeId);
         });
 
         if (parts.isEmpty()) {

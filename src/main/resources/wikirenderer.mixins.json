@@ -28,6 +28,7 @@
     "access.GameRendererAccessor",
     "access.GuiRendererAccessor",
     "access.ItemStackRenderStateAccessor",
+    "access.LevelAccessor",
     "access.LevelRendererAccessor",
     "access.LightmapRenderStateExtractorAccessor",
     "access.LivingEntityRendererAccessor",
@@ -59,17 +60,26 @@
     "entity.sprite.VillagerProfessionLayerMixin",
     "entity.sprite.WolfArmorLayerMixin",
     "screen.AbstractContainerScreenMixin",
+    "screen.AbstractWidgetAccessor",
+    "screen.AbstractWidgetMixin",
+    "screen.ButtonAccessor",
+    "screen.CheckboxAccessor",
+    "screen.ClickableStyleFinderAccessor",
+    "screen.EditBoxAccessor",
+    "screen.EditBoxMixin",
+    "screen.GuiGraphicsExtractorAccessor",
+    "screen.GuiGraphicsExtractorMixin",
     "screen.PreparedRenderTypeMixin",
     "screen.ScreenMixin",
+    "screen.StagedVertexBufferDrawAccessor",
+    "screen.TextBoxComponentAccessor",
     "texture.AnimationStateMixin",
-    "texture.GuiGraphicsExtractorMixin",
     "texture.ItemStackMixin",
     "texture.SelectItemModelMixin",
     "texture.TextureManagerMixin",
     "texture.TextureTransformMixin",
     "texture.UnbakedSwitchMixin",
     "world.BlockEntityRenderDispatcherMixin",
-    "world.ChunkSectionsToRenderMixin",
     "world.EntityCullingBypassMixin",
     "world.EntityRendererMixin",
     "world.LevelExtractorMixin",
@@ -85,8 +95,5 @@
   ],
   "injectors": {
     "defaultRequire": 1
-  },
-  "mixins": [
-    "access.LevelAccessor"
-  ]
+  }
 }

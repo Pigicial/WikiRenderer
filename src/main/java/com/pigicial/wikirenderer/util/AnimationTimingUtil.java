@@ -13,9 +13,11 @@ import net.minecraft.client.renderer.item.ItemModelResolver;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.texture.UvMapping;
 import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.client.resources.model.SimpleModelWrapper;
 import net.minecraft.client.resources.model.geometry.BakedQuad;
+import net.minecraft.client.resources.model.geometry.ItemQuads;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.RandomSource;
@@ -59,7 +61,7 @@ public class AnimationTimingUtil {
         }
 
         for (ItemStackRenderState.LayerRenderState layer : ((ItemStackRenderStateAccessor) renderState).wikirenderer$getLayers()) {
-            fillTimings(layer.prepareQuadList(), animationTimings);
+            fillTimings(layer.quads.all(), animationTimings);
         }
 
         renderState.clear();
@@ -82,7 +84,7 @@ public class AnimationTimingUtil {
         );
 
         for (ItemStackRenderState.LayerRenderState layer : ((ItemStackRenderStateAccessor) renderState).wikirenderer$getLayers()) {
-            fillTimings(layer.prepareQuadList(), animationTimings);
+            fillTimings(layer.quads.all(), animationTimings);
         }
 
         renderState.clear();
@@ -112,9 +114,21 @@ public class AnimationTimingUtil {
         }
     }
 
+    public static void fillTimings(ItemQuads quads, List<Integer> animationCompletionTimes) {
+        for (BakedQuad quad : quads.all()) {
+            fillTimings(quad.materialInfo().sprite(), animationCompletionTimes);
+        }
+    }
+
     public static void fillBlockTimings(Collection<BlockStateModelPart> modelParts, List<Integer> animationCompletionTimes) {
         for (BlockStateModelPart modelPart : modelParts) {
             fillTimings(modelPart.particleMaterial().sprite(), animationCompletionTimes);
+        }
+    }
+
+    public static void fillTimings(UvMapping uvMapping, List<Integer> animationCompletionTimes) {
+        if (uvMapping instanceof TextureAtlasSprite sprite) {
+            fillTimings(sprite, animationCompletionTimes);
         }
     }
 

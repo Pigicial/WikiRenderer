@@ -1,28 +1,25 @@
 package com.pigicial.wikirenderer.screen;
 
-import com.pigicial.wikirenderer.components.*;
 import com.pigicial.wikirenderer.property.DoubleProperty;
 import com.pigicial.wikirenderer.property.IntProperty;
 import com.pigicial.wikirenderer.property.Property;
+import com.pigicial.wikirenderer.screen.components.*;
+import com.pigicial.wikirenderer.screen.owo.base.BaseUIComponent;
+import com.pigicial.wikirenderer.screen.owo.component.*;
+import com.pigicial.wikirenderer.screen.owo.container.FlowLayout;
+import com.pigicial.wikirenderer.screen.owo.container.UIContainers;
+import com.pigicial.wikirenderer.screen.owo.core.Insets;
+import com.pigicial.wikirenderer.screen.owo.core.Sizing;
+import com.pigicial.wikirenderer.screen.owo.core.UIComponent;
+import com.pigicial.wikirenderer.screen.owo.core.VerticalAlignment;
 import com.pigicial.wikirenderer.util.Translate;
-import io.wispforest.owo.ui.base.BaseUIComponent;
-import io.wispforest.owo.ui.component.ButtonComponent;
-import io.wispforest.owo.ui.component.LabelComponent;
-import io.wispforest.owo.ui.component.TextBoxComponent;
-import io.wispforest.owo.ui.component.UIComponents;
-import io.wispforest.owo.ui.container.FlowLayout;
-import io.wispforest.owo.ui.container.UIContainers;
-import io.wispforest.owo.ui.core.Insets;
-import io.wispforest.owo.ui.core.Sizing;
-import io.wispforest.owo.ui.core.UIComponent;
-import io.wispforest.owo.ui.core.VerticalAlignment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,12 +41,12 @@ public class WikiRendererUI {
 
     public static TextBoxComponent labelledTextField(FlowLayout container, String content, String key, Sizing sizing) {
         try (RowBuilder builder = rowBuilder(container)) {
-            TextBoxComponent textBox = UIComponents.textBox(sizing, content);
+            TextBoxComponent textBox = textBox(sizing, content);
             textBox.setMaxLength(100); // allow more characters
             textBox.text(content); // fixes if it truncates early
             builder.row.child(textBox);
 
-            BaseUIComponent label = UIComponents.label(Translate.gui(key)).margins(Insets.left(8));
+            BaseUIComponent label = label(Translate.gui(key)).margins(Insets.left(8));
             addTooltipIfPossible(label, key);
             builder.row.child(label);
 
@@ -117,7 +114,7 @@ public class WikiRendererUI {
     }
 
     public static ButtonComponent button(Component message, Consumer<ButtonComponent> onPress) {
-        ButtonComponent button = UIComponents.button(message, onPress);
+        ButtonComponent button = new ButtonComponent(message, onPress);
         button.margins(Insets.of(2, 3, 0, 0));
         return button;
     }
@@ -197,6 +194,24 @@ public class WikiRendererUI {
         FlowLayout layout = UIContainers.ltrTextFlow(Sizing.fill(100), Sizing.content());
         layout.margins(Insets.of(3, 3, 0, 0)).verticalAlignment(VerticalAlignment.CENTER);
         return new RowBuilder(layout, container);
+    }
+
+    public static TextBoxComponent textBox(Sizing horizontalSizing, String text) {
+        TextBoxComponent textBox = new TextBoxComponent(horizontalSizing);
+        textBox.text(text);
+        return textBox;
+    }
+
+    public static ItemComponent item(ItemStack item) {
+        return new ItemComponent(item);
+    }
+
+    public static LabelComponent label(Component text) {
+        return new LabelComponent(text);
+    }
+
+    public static DropdownComponent dropdown(Sizing horizontalSizing) {
+        return new DropdownComponent(horizontalSizing);
     }
 
     public static class RowBuilder implements AutoCloseable {

@@ -7,7 +7,7 @@ import com.pigicial.wikirenderer.property.config.WikiRendererConfigs;
 import com.pigicial.wikirenderer.render.Renderable;
 import com.pigicial.wikirenderer.screen.RenderScreen;
 import com.pigicial.wikirenderer.screen.WikiRendererUI;
-import io.wispforest.owo.ui.container.FlowLayout;
+import com.pigicial.wikirenderer.screen.owo.container.FlowLayout;
 
 public class BlockStatePropertyBundle extends DefaultCroppablePropertyBundle implements SerializablePropertyBundle {
 

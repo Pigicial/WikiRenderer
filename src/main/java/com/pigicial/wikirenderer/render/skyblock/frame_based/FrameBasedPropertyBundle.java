@@ -1,16 +1,16 @@
 package com.pigicial.wikirenderer.render.skyblock.frame_based;
 
-import com.pigicial.wikirenderer.components.DynamicItemsListComponent;
+import com.pigicial.wikirenderer.screen.components.DynamicItemsListComponent;
 import com.pigicial.wikirenderer.property.*;
 import com.pigicial.wikirenderer.render.Renderable;
 import com.pigicial.wikirenderer.screen.RenderScreen;
 import com.pigicial.wikirenderer.screen.WikiRendererUI;
+import com.pigicial.wikirenderer.screen.owo.component.ButtonComponent;
+import com.pigicial.wikirenderer.screen.owo.container.FlowLayout;
+import com.pigicial.wikirenderer.screen.owo.core.Insets;
+import com.pigicial.wikirenderer.screen.owo.core.Sizing;
 import com.pigicial.wikirenderer.util.ClipboardUtil;
 import com.pigicial.wikirenderer.util.Translate;
-import io.wispforest.owo.ui.component.ButtonComponent;
-import io.wispforest.owo.ui.container.FlowLayout;
-import io.wispforest.owo.ui.core.Insets;
-import io.wispforest.owo.ui.core.Sizing;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.MutableComponent;
 import org.joml.Matrix4fStack;

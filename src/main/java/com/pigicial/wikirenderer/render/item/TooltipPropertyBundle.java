@@ -6,9 +6,9 @@ import com.pigicial.wikirenderer.property.config.WikiRendererConfigs;
 import com.pigicial.wikirenderer.render.Renderable;
 import com.pigicial.wikirenderer.screen.RenderScreen;
 import com.pigicial.wikirenderer.screen.WikiRendererUI;
-import io.wispforest.owo.ui.component.TextBoxComponent;
-import io.wispforest.owo.ui.container.FlowLayout;
-import io.wispforest.owo.ui.core.Sizing;
+import com.pigicial.wikirenderer.screen.owo.component.TextBoxComponent;
+import com.pigicial.wikirenderer.screen.owo.container.FlowLayout;
+import com.pigicial.wikirenderer.screen.owo.core.Sizing;
 import org.joml.Matrix4fStack;
 
 public class TooltipPropertyBundle extends DefaultCroppablePropertyBundle implements SerializablePropertyBundle {

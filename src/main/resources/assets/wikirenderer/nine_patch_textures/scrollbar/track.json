@@ -1,0 +1,17 @@
+{
+  "texture": "wikirenderer:textures/gui/scrollbar.png",
+  "texture_size": {
+    "width": 64,
+    "height": 32
+  },
+  "u": 26,
+  "repeat": false,
+  "corner_patch_size": {
+    "width": 1,
+    "height": 1
+  },
+  "center_patch_size": {
+    "width": 4,
+    "height": 30
+  }
+}

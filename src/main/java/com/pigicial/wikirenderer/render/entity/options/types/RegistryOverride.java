@@ -1,11 +1,11 @@
 package com.pigicial.wikirenderer.render.entity.options.types;
 
-import com.pigicial.wikirenderer.components.FullWidthCollapsibleContainer;
-import com.pigicial.wikirenderer.components.SearchableEntityListComponent;
+import com.pigicial.wikirenderer.screen.components.FullWidthCollapsibleContainer;
+import com.pigicial.wikirenderer.screen.components.SearchableEntityListComponent;
+import com.pigicial.wikirenderer.screen.owo.container.FlowLayout;
+import com.pigicial.wikirenderer.screen.owo.core.Sizing;
+import com.pigicial.wikirenderer.screen.owo.core.UIComponent;
 import com.pigicial.wikirenderer.util.Translate;
-import io.wispforest.owo.ui.container.FlowLayout;
-import io.wispforest.owo.ui.core.Sizing;
-import io.wispforest.owo.ui.core.UIComponent;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.core.Holder;
@@ -43,7 +43,7 @@ public class RegistryOverride<S extends EntityRenderState, R> extends OptionalOv
                             boolean forcedFallback) {
         super(key, getter, setter, null);
 
-        vanillaLookup = vanillaLookup == null ? VanillaRegistries.createLookup() : vanillaLookup;
+        vanillaLookup = vanillaLookup == null ? VanillaRegistries.createWorldLookup() : vanillaLookup;
         HolderLookup.RegistryLookup<R> lookup = vanillaLookup.lookupOrThrow(registryKey);
         for (Holder.Reference<R> option : lookup.listElements().toList()) {
             if (option.isBound()) {
@@ -64,7 +64,7 @@ public class RegistryOverride<S extends EntityRenderState, R> extends OptionalOv
     }
 
     public static <R> Holder.Reference<R> getHolderValue(ResourceKey<? extends Registry<? extends R>> registryType, R value) {
-        vanillaLookup = vanillaLookup == null ? VanillaRegistries.createLookup() : vanillaLookup;
+        vanillaLookup = vanillaLookup == null ? VanillaRegistries.createWorldLookup() : vanillaLookup;
         HolderLookup.RegistryLookup<R> lookup = vanillaLookup.lookupOrThrow(registryType);
         for (Holder.Reference<R> option : lookup.listElements().toList()) {
             if (option.isBound() && option.value() == value) {
@@ -76,7 +76,7 @@ public class RegistryOverride<S extends EntityRenderState, R> extends OptionalOv
     }
 
     public static <R> Holder.Reference<R> getHolderValue(ResourceKey<? extends Registry<? extends R>> registryType, ResourceKey<R> value) {
-        vanillaLookup = vanillaLookup == null ? VanillaRegistries.createLookup() : vanillaLookup;
+        vanillaLookup = vanillaLookup == null ? VanillaRegistries.createWorldLookup() : vanillaLookup;
         HolderLookup.RegistryLookup<R> lookup = vanillaLookup.lookupOrThrow(registryType);
         for (Holder.Reference<R> option : lookup.listElements().toList()) {
             if (option.isBound() && option.key() == value) {
@@ -88,7 +88,7 @@ public class RegistryOverride<S extends EntityRenderState, R> extends OptionalOv
     }
 
     public static <R> List<Holder.Reference<R>> getHolderValues(ResourceKey<? extends Registry<? extends R>> registryType) {
-        vanillaLookup = vanillaLookup == null ? VanillaRegistries.createLookup() : vanillaLookup;
+        vanillaLookup = vanillaLookup == null ? VanillaRegistries.createWorldLookup() : vanillaLookup;
         HolderLookup.RegistryLookup<R> lookup = vanillaLookup.lookupOrThrow(registryType);
         return lookup.listElements().toList();
     }

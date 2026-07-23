@@ -1,18 +1,20 @@
 package com.pigicial.wikirenderer.render.batch;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.renderpearl.api.commands.RenderPass;
 import com.pigicial.wikirenderer.WikiRenderer;
 import com.pigicial.wikirenderer.property.CroppablePropertyBundle;
-import com.pigicial.wikirenderer.render.particle.ParticleDisplayCondition;
 import com.pigicial.wikirenderer.render.Renderable;
 import com.pigicial.wikirenderer.render.export.ExportPathSpec;
 import com.pigicial.wikirenderer.render.export.FileIO;
 import com.pigicial.wikirenderer.render.item.AnimationTimingsProvider;
+import com.pigicial.wikirenderer.render.particle.ParticleDisplayCondition;
 import com.pigicial.wikirenderer.screen.RenderScreen;
 import com.pigicial.wikirenderer.textures.TextureData;
 import com.pigicial.wikirenderer.textures.TextureDataProvider;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4fStack;
@@ -122,6 +124,11 @@ public class BatchRenderable<R extends Renderable<?>> implements Renderable<Batc
     @Override
     public void drawSubmittedRenderFeatures() {
         this.currentDelegate.drawSubmittedRenderFeatures();
+    }
+
+    @Override
+    public void drawSubmittedRenderFeatures(@Nullable RenderPass pass, @Nullable FeatureRenderDispatcher.PreparedFrame frame) {
+        this.currentDelegate.drawSubmittedRenderFeatures(pass, frame);
     }
 
     @Override

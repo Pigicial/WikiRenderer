@@ -55,6 +55,12 @@ public class FluidVertexConsumer implements VertexConsumer {
     }
 
     @Override
+    public VertexConsumer setUv3(float u, float v) {
+        this.delegate.setUv3(u, v);
+        return this;
+    }
+
+    @Override
     public @NonNull VertexConsumer setNormal(float x, float y, float z) {
         Vector3f transformed = new Vector3f(x, y, z).mul(this.normalTransform);
         this.delegate.setNormal(transformed.x(), transformed.y(), transformed.z());

@@ -2,7 +2,6 @@ package com.pigicial.wikirenderer.mixin;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.pigicial.wikirenderer.WikiRenderer;
-import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.renderer.GameRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -21,7 +20,7 @@ public class GameRendererMixin {
     }
 
     @Inject(method = "renderLevel", at = @At("HEAD"), cancellable = true)
-    public void dontRenderInScreen(DeltaTracker deltaTracker, CallbackInfo ci) {
+    public void dontRenderInScreen(CallbackInfo ci) {
         if (!WikiRenderer.skipWorldRender) return;
 
         WikiRenderer.skipWorldRender = false;

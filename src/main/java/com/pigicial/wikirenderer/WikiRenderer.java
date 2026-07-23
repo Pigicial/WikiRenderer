@@ -1,34 +1,40 @@
 package com.pigicial.wikirenderer;
 
 import com.mojang.blaze3d.ProjectionType;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.pigicial.wikirenderer.command.WikiRendererCommand;
-import com.pigicial.wikirenderer.components.AreaSelectionComponent;
-import com.pigicial.wikirenderer.components.IOStateComponent;
+import com.pigicial.wikirenderer.screen.components.AreaSelectionComponent;
+import com.pigicial.wikirenderer.screen.components.IOStateComponent;
 import com.pigicial.wikirenderer.render.OrthographicSort;
-import com.pigicial.wikirenderer.render.export.animation.AnimationHandler;
-import com.pigicial.wikirenderer.render.particle.ParticleDisplayCondition;
 import com.pigicial.wikirenderer.render.area.AreaSelectionHelper;
 import com.pigicial.wikirenderer.render.area.MeshWorldOverrides;
+import com.pigicial.wikirenderer.render.export.CustomRenderPipelines;
 import com.pigicial.wikirenderer.render.export.FileIO;
+import com.pigicial.wikirenderer.render.export.animation.AnimationHandler;
+import com.pigicial.wikirenderer.render.particle.ParticleDisplayCondition;
 import com.pigicial.wikirenderer.render.skyblock.frame_based.SkyBlockTimingDataCacher;
+import com.pigicial.wikirenderer.screen.owo.container.FlowLayout;
+import com.pigicial.wikirenderer.screen.owo.container.UIContainers;
+import com.pigicial.wikirenderer.screen.owo.core.Positioning;
+import com.pigicial.wikirenderer.screen.owo.core.Sizing;
+import com.pigicial.wikirenderer.screen.owo.hud.Hud;
+import com.pigicial.wikirenderer.screen.owo.renderstate.OwoItemElementRenderState;
+import com.pigicial.wikirenderer.screen.owo.util.NinePatchTexture;
 import com.pigicial.wikirenderer.util.DrawType;
-import io.wispforest.owo.ui.container.FlowLayout;
-import io.wispforest.owo.ui.container.UIContainers;
-import io.wispforest.owo.ui.core.Positioning;
-import io.wispforest.owo.ui.core.Sizing;
-import io.wispforest.owo.ui.hud.Hud;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.PictureInPictureRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ProjectionMatrixBuffer;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.PackType;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
 import org.slf4j.Logger;
@@ -72,6 +78,15 @@ public class WikiRenderer implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         ClientCommandRegistrationCallback.EVENT.register(WikiRendererCommand::register);
+
+        ResourceLoader.get(PackType.CLIENT_RESOURCES).registerReloadListener(
+                Identifier.fromNamespaceAndPath(WikiRenderer.MOD_ID, "nine_patch_metadata"),
+                new NinePatchTexture.MetadataLoader()
+        );
+
+        CustomRenderPipelines.register();
+        PictureInPictureRendererRegistry.register(_ -> new OwoItemElementRenderState.Renderer());
+
         WikiRendererKeybinds.registerKeyBinds();
         SkyBlockTimingDataCacher.getInstance().startTickEvent();
 

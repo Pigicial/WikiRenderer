@@ -1,16 +1,16 @@
 package com.pigicial.wikirenderer.render.export;
 
-import com.mojang.blaze3d.GpuFormat;
-import com.mojang.blaze3d.buffers.GpuBuffer;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.renderpearl.api.GpuFormat;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
+import com.mojang.renderpearl.api.commands.CommandEncoder;
+import com.mojang.renderpearl.api.textures.GpuTexture;
 import com.pigicial.wikirenderer.WikiRenderer;
 import com.pigicial.wikirenderer.property.CroppablePropertyBundle;
 import com.pigicial.wikirenderer.property.GlobalProperties;
@@ -85,7 +85,7 @@ public class RenderableDispatcher {
         }
 
         if (previewTarget == null) {
-            previewTarget = new TextureTarget("WikiRenderer RenderableDispatcher Preview Framebuffer", width, height, true, GpuFormat.RGBA8_UNORM);
+            previewTarget = new TextureTarget("WikiRenderer RenderableDispatcher Preview Framebuffer", width, height, GpuFormat.RGBA8_UNORM, GpuFormat.D32_FLOAT);
         } else {
             if (previewTarget.width != width || previewTarget.height != height) {
                 previewTarget.resize(width, height);
@@ -113,7 +113,7 @@ public class RenderableDispatcher {
         int width = renderable.optionallyOverrideExportWidth(size);
         int height = renderable.optionallyOverrideExportHeight(size);
         float aspectRatio = width / (float) height;
-        TextureTarget target = new TextureTarget("WikiRenderer RenderableDispatcher.drawIntoTexture Framebuffer", width, height, true, GpuFormat.RGBA8_UNORM);
+        TextureTarget target = new TextureTarget("WikiRenderer RenderableDispatcher.drawIntoTexture Framebuffer", width, height, GpuFormat.RGBA8_UNORM, GpuFormat.D32_FLOAT);
 
         GlobalProperties globalProperties = GlobalProperties.get();
         int backgroundColor = globalProperties.showBackgroundColorInExports.get() ? globalProperties.backgroundColor : 0;

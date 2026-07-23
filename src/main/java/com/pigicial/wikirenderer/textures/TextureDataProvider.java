@@ -2,16 +2,15 @@ package com.pigicial.wikirenderer.textures;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
-import com.mojang.authlib.yggdrasil.response.MinecraftTexturesPayload;
+import com.mojang.authlib.services.response.MinecraftTexturesPayload;
 import com.pigicial.wikirenderer.render.item.ItemRenderable;
 import com.pigicial.wikirenderer.screen.RenderScreen;
 import com.pigicial.wikirenderer.screen.ScreenSchedulerAndSaver;
 import com.pigicial.wikirenderer.screen.WikiRendererUI;
+import com.pigicial.wikirenderer.screen.owo.container.FlowLayout;
+import com.pigicial.wikirenderer.screen.owo.core.Insets;
 import com.pigicial.wikirenderer.util.ClipboardUtil;
 import com.pigicial.wikirenderer.util.Translate;
-import io.wispforest.owo.ui.component.UIComponents;
-import io.wispforest.owo.ui.container.FlowLayout;
-import io.wispforest.owo.ui.core.Insets;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Util;
@@ -50,22 +49,22 @@ public interface TextureDataProvider {
                     Component typeText = Translate.gui("texture_type." + type.name().toLowerCase());
                     Component mergedText = Component.literal(contextText.getString() + " " + typeText.getString()); // jank
 
-                    builder.row.child(UIComponents.label(mergedText).margins(Insets.of(5, 0, 0, 10)));
+                    builder.row.child(WikiRendererUI.label(mergedText).margins(Insets.of(5, 0, 0, 10)));
 
-                    builder.row.child(UIComponents.button(Translate.gui("open_url"), button -> Util.getPlatform().openUri(texture.getUrl())));
+                    builder.row.child(WikiRendererUI.button(Translate.gui("open_url"), button -> Util.getPlatform().openUri(texture.getUrl())));
                     if (ClipboardUtil.hasTextClipboardAccess()) {
-                        builder.row.child(UIComponents.button(Translate.gui("copy_texture_id"), button -> {
+                        builder.row.child(WikiRendererUI.button(Translate.gui("copy_texture_id"), button -> {
                             screen.notify(Translate.gui("copied_texture_id_to_clipboard"));
                             ClipboardUtil.setClipboard(texture.getHash());
                         }));
 
-                        builder.row.child(UIComponents.button(Translate.gui("copy_json"), button -> {
+                        builder.row.child(WikiRendererUI.button(Translate.gui("copy_json"), button -> {
                             screen.notify(Translate.gui("copied_json_to_clipboard"));
                             ClipboardUtil.setClipboard(PlayerTextureUtils.GSON.toJson(payload));
                         }));
 
                         if (!(this instanceof ItemRenderable) && type == MinecraftProfileTexture.Type.SKIN) {
-                            builder.row.child(UIComponents.button(Translate.gui("render_head"), button -> {
+                            builder.row.child(WikiRendererUI.button(Translate.gui("render_head"), button -> {
                                 ItemStack head = PlayerTextureUtils.createPlayerHead(profile);
                                 ScreenSchedulerAndSaver.setSavedScreen(screen);
                                 ScreenSchedulerAndSaver.openImmediately(new RenderScreen(new ItemRenderable(head)));

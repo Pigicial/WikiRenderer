@@ -1,9 +1,12 @@
 package com.pigicial.wikirenderer.render;
 
-import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.commands.RenderPass;
+import com.pigicial.wikirenderer.WikiRenderer;
 import com.pigicial.wikirenderer.mixin.access.GameRendererAccessor;
 import com.pigicial.wikirenderer.mixin.access.LevelRendererAccessor;
 import com.pigicial.wikirenderer.mixin.access.LightmapRenderStateExtractorAccessor;
@@ -12,12 +15,15 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.Lightmap;
 import net.minecraft.client.renderer.LightmapRenderStateExtractor;
 import net.minecraft.client.renderer.SubmitNodeStorage;
+import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import net.minecraft.client.renderer.state.LightmapRenderState;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.ByteBuffer;
+import java.util.Optional;
+import java.util.OptionalDouble;
 
 public abstract class DefaultRenderable<P extends DefaultPropertyBundle> implements Renderable<P> {
 
@@ -110,10 +116,26 @@ public abstract class DefaultRenderable<P extends DefaultPropertyBundle> impleme
     }
 
     @Override
-    public void drawSubmittedRenderFeatures() {
+    public void drawSubmittedRenderFeatures(@Nullable RenderPass pass, @Nullable FeatureRenderDispatcher.PreparedFrame preExistingFrame) {
+        if (pass != null && preExistingFrame != null) {
+            FeatureRenderDispatcher.renderAllFeatures(pass, preExistingFrame);
+            return;
+        }
+
         // Draw all buffers
         SubmitNodeStorage submitNodeStorage = ((LevelRendererAccessor) Minecraft.getInstance().levelRenderer).wikirenderer$getSubmitNodeStorage();
-        Minecraft.getInstance().gameRenderer.featureRenderDispatcher().renderAllFeatures(submitNodeStorage);
+        FeatureRenderDispatcher featureRenderDispatcher = Minecraft.getInstance().gameRenderer.featureRenderDispatcher();
+        try (FeatureRenderDispatcher.PreparedFrame frame = featureRenderDispatcher.prepareFrame(submitNodeStorage)) {
+            RenderTarget mainTarget = WikiRenderer.mainTargetOverride == null ? Minecraft.getInstance().gameRenderer.mainRenderTarget() : WikiRenderer.mainTargetOverride;
+
+            try (RenderPass renderPass = RenderSystem.getDevice()
+                    .createCommandEncoder()
+                    .createRenderPass(() -> "Main render features", mainTarget.getColorTextureView(), Optional.empty(), mainTarget.getDepthTextureView(), OptionalDouble.empty())) {
+
+                RenderSystem.bindDefaultUniforms(renderPass);
+                FeatureRenderDispatcher.renderAllFeatures(renderPass, frame);
+            }
+        }
         //Minecraft.getInstance().renderBuffers().bufferSource().endBatch();
     }
 

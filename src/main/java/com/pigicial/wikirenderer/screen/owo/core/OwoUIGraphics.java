@@ -1,0 +1,338 @@
+package com.pigicial.wikirenderer.screen.owo.core;
+
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import com.pigicial.wikirenderer.WikiRenderer;
+import com.pigicial.wikirenderer.mixin.screen.GuiGraphicsExtractorAccessor;
+import com.pigicial.wikirenderer.screen.owo.event.WindowResizeCallback;
+import com.pigicial.wikirenderer.screen.owo.renderstate.GradientQuadElementRenderState;
+import com.pigicial.wikirenderer.screen.owo.util.NinePatchTexture;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.navigation.ScreenPosition;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.state.gui.GuiRenderState;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.resources.Identifier;
+import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix3x2f;
+import org.joml.Matrix3x2fStack;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+
+public class OwoUIGraphics extends GuiGraphicsExtractor {
+
+    public static final Identifier PANEL_NINE_PATCH_TEXTURE = Identifier.fromNamespaceAndPath(WikiRenderer.MOD_ID, "panel/default");
+    public static final Identifier DARK_PANEL_NINE_PATCH_TEXTURE = Identifier.fromNamespaceAndPath(WikiRenderer.MOD_ID, "panel/dark");
+    public static final Identifier PANEL_INSET_NINE_PATCH_TEXTURE = Identifier.fromNamespaceAndPath(WikiRenderer.MOD_ID, "panel/inset");
+
+    public final Consumer<Runnable> setTooltipDrawer;
+
+    protected OwoUIGraphics(Minecraft client, GuiRenderState renderState, int mouseX, int mouseY, Consumer<Runnable> setTooltipDrawer) {
+        super(client, renderState, mouseX, mouseY);
+        this.setTooltipDrawer = setTooltipDrawer;
+    }
+
+    public static OwoUIGraphics of(GuiGraphicsExtractor graphics) {
+        var owoContext = new OwoUIGraphics(
+            Minecraft.getInstance(),
+            graphics.guiRenderState,
+            ((GuiGraphicsExtractorAccessor) graphics).owo$getMouseY(),
+            ((GuiGraphicsExtractorAccessor) graphics).owo$getMouseX(),
+            ((GuiGraphicsExtractorAccessor) graphics)::owo$setDeferredTooltip
+        );
+
+        ((GuiGraphicsExtractorAccessor) owoContext).owo$setScissorStack(((GuiGraphicsExtractorAccessor) graphics).owo$getScissorStack());
+        ((GuiGraphicsExtractorAccessor) owoContext).owo$setPose(((GuiGraphicsExtractorAccessor) graphics).owo$getPose());
+
+        return owoContext;
+    }
+
+    public Matrix3x2fStack getMatrixStack() {
+        return this.pose();
+    }
+
+    public OwoUIGraphics translate(double x, double y) {
+        this.getMatrixStack().translate((float) x, (float) y);
+        return this;
+    }
+
+    public OwoUIGraphics translate(float x, float y) {
+        this.getMatrixStack().translate(x, y);
+        return this;
+    }
+
+    public OwoUIGraphics scale(float x, float y) {
+        this.getMatrixStack().scale(x, y);
+        return this;
+    }
+
+    public OwoUIGraphics push() {
+        this.getMatrixStack().pushMatrix();
+        return this;
+    }
+
+    public OwoUIGraphics pop() {
+        this.getMatrixStack().popMatrix();
+        return this;
+    }
+
+    public OwoUIGraphics mul(Matrix3x2f matrix) {
+        this.getMatrixStack().mul(matrix);
+        return this;
+    }
+
+    public static UtilityScreen utilityScreen() {
+        return UtilityScreen.get();
+    }
+
+    public boolean intersectsScissor(PositionedRectangle other) {
+        other = other.transform(getMatrixStack());
+
+        var rect = this.scissorStack.peek();
+
+        if (rect == null) return true;
+
+        var pos = rect.position();
+
+        return other.x() < pos.x() + rect.width()
+            && other.x() + other.width() >= pos.x()
+            && other.y() < pos.y() + rect.height()
+            && other.y() + other.height() >= pos.y();
+    }
+
+    public void drawRectOutline(int x, int y, int width, int height, int color) {
+        drawRectOutline(RenderPipelines.GUI, x, y, width, height, color);
+    }
+
+    /**
+     * Draw the outline of a rectangle
+     *
+     * @param x      The x-coordinate of top-left corner of the rectangle
+     * @param y      The y-coordinate of top-left corner of the rectangle
+     * @param width  The width of the rectangle
+     * @param height The height of the rectangle
+     * @param color  The color of the rectangle
+     */
+    public void drawRectOutline(RenderPipeline pipeline, int x, int y, int width, int height, int color) {
+        this.fill(pipeline, x, y, x + width, y + 1, color);
+        this.fill(pipeline, x, y + height - 1, x + width, y + height, color);
+
+        this.fill(pipeline, x, y + 1, x + 1, y + height - 1, color);
+        this.fill(pipeline, x + width - 1, y + 1, x + width, y + height - 1, color);
+    }
+
+    public void drawGradientRect(int x, int y, int width, int height, int topLeftColor, int topRightColor, int bottomRightColor, int bottomLeftColor) {
+        this.drawGradientRect(RenderPipelines.GUI, x, y, width, height, topLeftColor, topRightColor, bottomRightColor, bottomLeftColor);
+    }
+
+    /**
+     * Draw a filled rectangle with a gradient
+     *
+     * @param x                The x-coordinate of top-left corner of the rectangle
+     * @param y                The y-coordinate of top-left corner of the rectangle
+     * @param width            The width of the rectangle
+     * @param height           The height of the rectangle
+     * @param topLeftColor     The color at the rectangle's top left corner
+     * @param topRightColor    The color at the rectangle's top right corner
+     * @param bottomRightColor The color at the rectangle's bottom right corner
+     * @param bottomLeftColor  The color at the rectangle's bottom left corner
+     */
+    public void drawGradientRect(RenderPipeline pipeline, int x, int y, int width, int height, int topLeftColor, int topRightColor, int bottomRightColor, int bottomLeftColor) {
+        this.guiRenderState.addGuiElement(new GradientQuadElementRenderState(
+            pipeline,
+            new Matrix3x2f(this.pose()),
+            new ScreenRectangle(new ScreenPosition(x, y), width, height),
+            this.scissorStack.peek(),
+            Color.ofArgb(topLeftColor),
+            Color.ofArgb(topRightColor),
+            Color.ofArgb(bottomLeftColor),
+            Color.ofArgb(bottomRightColor)
+        ));
+    }
+
+    /**
+     * Draw a panel that looks like the background of a vanilla
+     * inventory screen
+     *
+     * @param x      The x-coordinate of top-left corner of the panel
+     * @param y      The y-coordinate of top-left corner of the panel
+     * @param width  The width of the panel
+     * @param height The height of the panel
+     * @param dark   Whether to use the dark version of the panel texture
+     */
+    public void drawPanel(int x, int y, int width, int height, boolean dark) {
+        NinePatchTexture.draw(dark ? DARK_PANEL_NINE_PATCH_TEXTURE : PANEL_NINE_PATCH_TEXTURE, this, x, y, width, height);
+    }
+
+    public void drawText(Component text, float x, float y, float scale, int color) {
+        drawText(text, x, y, scale, color, TextAnchor.TOP_LEFT);
+    }
+
+    public void drawText(Component text, float x, float y, float scale, int color, TextAnchor anchorPoint) {
+        final var textRenderer = Minecraft.getInstance().font;
+
+        this.pose().pushMatrix();
+        this.pose().scale(scale, scale);
+
+        switch (anchorPoint) {
+            case TOP_RIGHT -> x -= textRenderer.width(text) * scale;
+            case BOTTOM_LEFT -> y -= textRenderer.lineHeight * scale;
+            case BOTTOM_RIGHT -> {
+                x -= textRenderer.width(text) * scale;
+                y -= textRenderer.lineHeight * scale;
+            }
+        }
+
+
+        this.text(textRenderer, text, (int) (x * (1 / scale)), (int) (y * (1 / scale)), color, false);
+        this.pose().popMatrix();
+    }
+
+    public enum TextAnchor {
+        TOP_RIGHT, BOTTOM_RIGHT, TOP_LEFT, BOTTOM_LEFT
+    }
+
+    public void drawTooltip(Font textRenderer, int x, int y, List<ClientTooltipComponent> components) {
+        drawTooltip(textRenderer, x, y, components, null);
+    }
+
+    public void drawTooltip(Font textRenderer, int x, int y, List<ClientTooltipComponent> components, @Nullable Identifier texture) {
+        ((GuiGraphicsExtractorAccessor) this).owo$tooltip(textRenderer, components, x, y, DefaultTooltipPositioner.INSTANCE, texture, false);
+    }
+
+    // --- debug rendering ---
+
+    public static void drawInsets(OwoUIGraphics self, int x, int y, int width, int height, Insets insets, int color) {
+        drawInsets(self, RenderPipelines.GUI, x, y, width, height, insets, color);
+    }
+
+    /**
+     * Draw the area around the given rectangle which
+     * the given insets describe
+     *
+     * @param x      The x-coordinate of top-left corner of the rectangle
+     * @param y      The y-coordinate of top-left corner of the rectangle
+     * @param width  The width of the rectangle
+     * @param height The height of the rectangle
+     * @param insets The insets to draw around the rectangle
+     * @param color  The color to draw the inset area with
+     */
+    public static void drawInsets(OwoUIGraphics self, RenderPipeline pipeline, int x, int y, int width, int height, Insets insets, int color) {
+        self.fill(pipeline, x - insets.left(), y - insets.top(), x + width + insets.right(), y, color);
+        self.fill(pipeline, x - insets.left(), y + height, x + width + insets.right(), y + height + insets.bottom(), color);
+
+        self.fill(pipeline, x - insets.left(), y, x, y + height, color);
+        self.fill(pipeline, x + width, y, x + width + insets.right(), y + height, color);
+    }
+
+    /**
+     * Draw the element inspector for the given tree, detailing the position,
+     * bounding box, margins and padding of each component
+     *
+     * @param root        The root component of the hierarchy to draw
+     * @param mouseX      The x-coordinate of the mouse pointer
+     * @param mouseY      The y-coordinate of the mouse pointer
+     * @param onlyHovered Whether to only draw the inspector for the hovered widget
+     */
+    public static void drawInspector(OwoUIGraphics self, ParentUIComponent root, double mouseX, double mouseY, boolean onlyHovered) {
+        var client = Minecraft.getInstance();
+        var textRenderer = client.font;
+
+        var children = new ArrayList<UIComponent>();
+        if (!onlyHovered) {
+            root.collectDescendants(children);
+        } else if (root.childAt((int) mouseX, (int) mouseY) != null) {
+            children.add(root.childAt((int) mouseX, (int) mouseY));
+        }
+
+        var pipeline = RenderPipelines.GUI;
+
+        for (var child : children) {
+            if (child instanceof ParentUIComponent parentComponent) {
+                drawInsets(self, pipeline, parentComponent.x(), parentComponent.y(), parentComponent.width(),
+                    parentComponent.height(), parentComponent.padding().get().inverted(), 0xA70CECDD);
+            }
+
+            final var margins = child.margins().get();
+            drawInsets(self, pipeline, child.x(), child.y(), child.width(), child.height(), margins, 0xA7FFF338);
+            self.drawRectOutline(pipeline, child.x(), child.y(), child.width(), child.height(), 0xFF3AB0FF);
+
+            if (onlyHovered) {
+
+                int inspectorX = child.x() + 1;
+                int inspectorY = child.y() + child.height() + child.margins().get().bottom() + 1;
+
+                final var message = Component.literal(child.getClass().getSimpleName())
+                    .append(child.id() == null ? "\n" : " '" + child.id() + "'\n")
+                    .append(child.inspectorDescriptor());
+                final var wrappedMessage = textRenderer.split(message, client.getWindow().getGuiScaledWidth() + 4);
+                int inspectorWidth = wrappedMessage.stream().mapToInt(textRenderer::width).max().orElse(30);
+                int inspectorHeight = textRenderer.lineHeight * wrappedMessage.size() + 4;
+
+                if (inspectorY > client.getWindow().getGuiScaledHeight() - inspectorHeight) {
+                    inspectorY -= child.fullSize().height() + inspectorHeight + 1;
+                    if (child instanceof ParentUIComponent parentComponent) {
+                        inspectorX += parentComponent.padding().get().left();
+                        inspectorY += parentComponent.padding().get().top();
+                    }
+                }
+                if (inspectorY < 0) inspectorY = 1;
+
+                if (inspectorX > client.getWindow().getGuiScaledWidth() - inspectorWidth) {
+                    inspectorX = client.getWindow().getGuiScaledWidth() - inspectorWidth - 2;
+                }
+                if (inspectorX < 0) inspectorX = 1;
+
+                self.fill(pipeline, inspectorX, inspectorY, inspectorX + inspectorWidth + 3, inspectorY + inspectorHeight, 0xA7000000);
+                self.drawRectOutline(pipeline, inspectorX, inspectorY, inspectorWidth + 3, inspectorHeight, 0xA7000000);
+
+                self.textWithWordWrap(textRenderer, message, inspectorX + 2, inspectorY + 2, inspectorWidth, 0xFFFFFFFF, false);
+            }
+        }
+    }
+
+    public static class UtilityScreen extends Screen {
+
+        private static UtilityScreen INSTANCE;
+
+        private UtilityScreen() {
+            super(Component.empty());
+        }
+
+        public static UtilityScreen get() {
+            if (INSTANCE == null) {
+                INSTANCE = new UtilityScreen();
+
+                final var client = Minecraft.getInstance();
+                INSTANCE.init(
+                    client.getWindow().getGuiScaledWidth(),
+                    client.getWindow().getGuiScaledHeight()
+                );
+            }
+
+            return INSTANCE;
+        }
+
+        public boolean handleTextClick(Style style, Screen screenAfterRun) {
+            if (style.getClickEvent() == null) return false;
+            defaultHandleGameClickEvent(style.getClickEvent(), this.minecraft, screenAfterRun);
+
+            return true;
+        }
+
+        static {
+            WindowResizeCallback.EVENT.register((client, window) -> {
+                if (INSTANCE == null) return;
+                INSTANCE.init(window.getGuiScaledWidth(), window.getGuiScaledHeight());
+            });
+        }
+    }
+}

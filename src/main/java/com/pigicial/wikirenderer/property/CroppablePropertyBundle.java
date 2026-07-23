@@ -5,13 +5,11 @@ import com.pigicial.wikirenderer.render.Renderable;
 import com.pigicial.wikirenderer.render.export.ImageRescaleMode;
 import com.pigicial.wikirenderer.screen.RenderScreen;
 import com.pigicial.wikirenderer.screen.WikiRendererUI;
+import com.pigicial.wikirenderer.screen.owo.component.TextBoxComponent;
+import com.pigicial.wikirenderer.screen.owo.container.FlowLayout;
+import com.pigicial.wikirenderer.screen.owo.core.Insets;
+import com.pigicial.wikirenderer.screen.owo.core.Sizing;
 import com.pigicial.wikirenderer.util.Translate;
-import io.wispforest.owo.ui.component.TextBoxComponent;
-import io.wispforest.owo.ui.component.UIComponents;
-import io.wispforest.owo.ui.container.FlowLayout;
-import io.wispforest.owo.ui.core.Insets;
-import io.wispforest.owo.ui.core.Sizing;
-import io.wispforest.owo.ui.core.Surface;
 
 public interface CroppablePropertyBundle extends PropertyBundle {
 
@@ -35,7 +33,7 @@ public interface CroppablePropertyBundle extends PropertyBundle {
         cropProperty.addRebuildListener(screen);
 
         if (cropProperty.get() && allowForRescaling) {
-            container.child(UIComponents.dropdown(Sizing.content())
+            container.child(WikiRendererUI.dropdown(Sizing.content())
                     .button(Translate.gui("rescale_longer_side"), _ -> {
                         resizeModeProperty.set(ImageRescaleMode.LONGER_SIDE);
                         screen.guiRebuildScheduled = true;
@@ -58,7 +56,6 @@ public interface CroppablePropertyBundle extends PropertyBundle {
                     })
                     .closeWhenNotHovered(false)
                     .padding(Insets.of(5))
-                    .surface(Surface.blur(10, 20))
             );
         }
 

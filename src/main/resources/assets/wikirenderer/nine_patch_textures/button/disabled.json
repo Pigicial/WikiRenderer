@@ -1,0 +1,17 @@
+{
+  "texture": "wikirenderer:textures/gui/buttons.png",
+  "texture_size": {
+    "width": 64,
+    "height": 192
+  },
+  "v": 128,
+  "repeat": true,
+  "corner_patch_size": {
+    "width": 3,
+    "height": 3
+  },
+  "center_patch_size": {
+    "width": 58,
+    "height": 58
+  }
+}

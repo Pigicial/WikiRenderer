@@ -31,7 +31,13 @@
   "depends": {
     "fabricloader": ">=0.18.5",
     "minecraft": ">=26.1",
-    "owo": ">=0.13.0",
     "fabric-api": "*"
+  },
+  "custom": {
+    "loom:injected_interfaces": {
+      "net/minecraft/client/gui/components/AbstractWidget": [
+        "com/pigicial/wikirenderer/screen/owo/inject/UIComponentStub"
+      ]
+    }
   }
 }

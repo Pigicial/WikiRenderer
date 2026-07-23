@@ -1,0 +1,114 @@
+package com.pigicial.wikirenderer.screen.owo.hud;
+
+import com.pigicial.wikirenderer.screen.owo.container.FlowLayout;
+import com.pigicial.wikirenderer.screen.owo.core.OwoUIAdapter;
+import com.pigicial.wikirenderer.screen.owo.core.UIComponent;
+import com.pigicial.wikirenderer.screen.owo.event.ClientRenderCallback;
+import com.pigicial.wikirenderer.screen.owo.event.WindowResizeCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.minecraft.client.Minecraft;
+import net.minecraft.resources.Identifier;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
+/**
+ * A utility for displaying owo-ui components on the
+ * in-game HUD
+ */
+public class Hud {
+
+    static @Nullable OwoUIAdapter<FlowLayout> adapter = null;
+    static boolean suppress = false;
+
+    private static final Map<Identifier, UIComponent> activeComponents = new HashMap<>();
+    private static final List<Consumer<FlowLayout>> pendingActions = new ArrayList<>();
+
+    /**
+     * Add a new component to be rendered on the in-game HUD.
+     * The root container used by the HUD does not support layout
+     * positioning - the component supplied by {@code component}
+     * must be explicitly positioned via either {@link com.pigicial.wikirenderer.screen.owo.core.Positioning#absolute(int, int)}
+     * or {@link com.pigicial.wikirenderer.screen.owo.core.Positioning#relative(int, int)}
+     *
+     * @param id        An ID uniquely describing this HUD component
+     * @param component A function creating the component
+     *                  when the HUD is first rendered
+     */
+    public static void add(Identifier id, Supplier<UIComponent> component) {
+        pendingActions.add(flowLayout -> {
+            var instance = component.get();
+
+            flowLayout.child(instance);
+            activeComponents.put(id, instance);
+        });
+    }
+
+    /**
+     * Remove the HUD component described by the given ID
+     *
+     * @param id The ID of the HUD component to remove
+     */
+    public static void remove(Identifier id) {
+        pendingActions.add(flowLayout -> {
+            var component = activeComponents.get(id);
+            if (component == null) return;
+
+            flowLayout.removeChild(component);
+            activeComponents.remove(id);
+        });
+    }
+
+    /**
+     * Get the HUD component described by the given ID
+     *
+     * @param id The ID of the HUD component to query
+     * @return The relevant HUD component, or {@code null} if there is none
+     */
+    public static @Nullable UIComponent getComponent(Identifier id) {
+        return activeComponents.get(id);
+    }
+
+    /**
+     * @return {@code true} if there is an active HUD component described by {@code id}
+     */
+    public static boolean hasComponent(Identifier id) {
+        return activeComponents.containsKey(id);
+    }
+
+    private static void initializeAdapter() {
+        var window = Minecraft.getInstance().getWindow();
+        adapter = OwoUIAdapter.createWithoutScreen(
+            0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), HudContainer::new
+        );
+
+        adapter.inflateAndMount();
+    }
+
+    static {
+        WindowResizeCallback.EVENT.register((client, window) -> {
+            if (adapter == null) return;
+            adapter.moveAndResize(0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight());
+        });
+
+        ClientRenderCallback.BEFORE.register(client -> {
+            if (client.level == null) return;
+            if (!pendingActions.isEmpty()) {
+                if (adapter == null) initializeAdapter();
+
+                pendingActions.forEach(action -> action.accept(adapter.rootComponent));
+                pendingActions.clear();
+            }
+        });
+
+        HudElementRegistry.addLast(Identifier.fromNamespaceAndPath("owo", "owo_ui_hud"), (context, tickCounter) -> {
+            if (adapter == null || suppress || Minecraft.getInstance().gui.hud.isHidden()) return;
+            adapter.extractRenderState(context, -69, -69, tickCounter.getGameTimeDeltaPartialTick(false));
+        });
+    }
+}

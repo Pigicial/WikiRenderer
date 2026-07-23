@@ -89,7 +89,7 @@ public class AreaSelectionHelper {
             return;
         }
 
-        BlockPos targetPos = new BlockPos(target.getType() == HitResult.Type.BLOCK ? ((BlockHitResult) target).getBlockPos() : BlockPos.containing(target.getLocation()));
+        BlockPos targetPos = target.getType() == HitResult.Type.BLOCK ? ((BlockHitResult) target).getBlockPos() : BlockPos.containing(target.getLocation());
 
         if (pos1 == null) {
             pos1 = targetPos;
@@ -106,7 +106,7 @@ public class AreaSelectionHelper {
             return;
         }
 
-        BlockPos targetPos = new BlockPos(target.getType() == HitResult.Type.BLOCK ? ((BlockHitResult) target).getBlockPos() : BlockPos.containing(target.getLocation()));
+        BlockPos targetPos = target.getType() == HitResult.Type.BLOCK ? ((BlockHitResult) target).getBlockPos() : BlockPos.containing(target.getLocation());
 
         if (pos1 == null) {
             pos1 = targetPos;

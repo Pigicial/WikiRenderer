@@ -1,14 +1,16 @@
 package com.pigicial.wikirenderer.render.skyblock.frame_based;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.renderpearl.api.commands.RenderPass;
 import com.pigicial.wikirenderer.property.GlobalProperties;
 import com.pigicial.wikirenderer.property.PropertyBundle;
 import com.pigicial.wikirenderer.render.Renderable;
 import com.pigicial.wikirenderer.render.export.ExportPathSpec;
 import com.pigicial.wikirenderer.render.export.FileIO;
 import com.pigicial.wikirenderer.screen.RenderScreen;
-import io.wispforest.owo.ui.component.ItemComponent;
+import com.pigicial.wikirenderer.screen.owo.component.ItemComponent;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4fStack;
@@ -281,6 +283,11 @@ public abstract class FrameBasedRenderable<S, R extends Renderable<P>, P extends
     @Override
     public void drawSubmittedRenderFeatures() {
         this.getOrUpdateRenderable().drawSubmittedRenderFeatures();
+    }
+
+    @Override
+    public void drawSubmittedRenderFeatures(@Nullable RenderPass pass, @Nullable FeatureRenderDispatcher.PreparedFrame frame) {
+        this.getOrUpdateRenderable().drawSubmittedRenderFeatures(pass, frame);
     }
 
     @Override

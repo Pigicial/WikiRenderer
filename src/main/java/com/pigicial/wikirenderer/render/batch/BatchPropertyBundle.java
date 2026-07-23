@@ -5,14 +5,13 @@ import com.pigicial.wikirenderer.render.Renderable;
 import com.pigicial.wikirenderer.render.item.ItemRenderable;
 import com.pigicial.wikirenderer.screen.RenderScreen;
 import com.pigicial.wikirenderer.screen.WikiRendererUI;
+import com.pigicial.wikirenderer.screen.owo.component.ButtonComponent;
+import com.pigicial.wikirenderer.screen.owo.container.FlowLayout;
+import com.pigicial.wikirenderer.screen.owo.core.Insets;
+import com.pigicial.wikirenderer.screen.owo.core.Sizing;
 import com.pigicial.wikirenderer.textures.TextureDataProvider;
 import com.pigicial.wikirenderer.util.ItemBlockUtil;
 import com.pigicial.wikirenderer.util.Translate;
-import io.wispforest.owo.ui.component.ButtonComponent;
-import io.wispforest.owo.ui.component.UIComponents;
-import io.wispforest.owo.ui.container.FlowLayout;
-import io.wispforest.owo.ui.core.Insets;
-import io.wispforest.owo.ui.core.Sizing;
 import net.minecraft.network.chat.Component;
 import org.joml.Matrix4fStack;
 
@@ -88,22 +87,22 @@ public class BatchPropertyBundle extends DefaultCroppablePropertyBundle {
         WikiRendererUI.booleanControl(container, EXPORT_AS_ANIMATIONS, "batch.export_as_animations");
 
         try (WikiRendererUI.RowBuilder builder = WikiRendererUI.autoNewLineRow(container)) {
-            ButtonComponent startButton = UIComponents.button(Translate.gui("batch.start"), button -> {
+            ButtonComponent startButton = WikiRendererUI.button(Translate.gui("batch.start"), button -> {
                 batchRenderable.start();
                 button.active = false;
             });
             builder.row.child(startButton.horizontalSizing(Sizing.content(20)));
-            builder.row.child(UIComponents.button(Translate.gui("batch.reset"), _ -> {
+            builder.row.child(WikiRendererUI.button(Translate.gui("batch.reset"), _ -> {
                 batchRenderable.reset(screen);
                 startButton.active = true;
             }));
-            builder.row.child(UIComponents.button(Translate.gui("batch.previous"), _ -> {
+            builder.row.child(WikiRendererUI.button(Translate.gui("batch.previous"), _ -> {
                 batchRenderable.decreaseIndex();
                 if (batchRenderable.currentDelegate instanceof TextureDataProvider) {
                     screen.guiRebuildScheduled = true;
                 }
             }));
-            builder.row.child(UIComponents.button(Translate.gui("batch.next"), _ -> {
+            builder.row.child(WikiRendererUI.button(Translate.gui("batch.next"), _ -> {
                 batchRenderable.increaseIndex();
                 if (batchRenderable.currentDelegate instanceof TextureDataProvider) {
                     screen.guiRebuildScheduled = true;

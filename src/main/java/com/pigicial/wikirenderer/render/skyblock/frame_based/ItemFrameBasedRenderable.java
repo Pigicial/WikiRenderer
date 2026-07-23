@@ -10,11 +10,11 @@ import com.pigicial.wikirenderer.render.export.FileIO;
 import com.pigicial.wikirenderer.render.item.ItemRenderable;
 import com.pigicial.wikirenderer.render.item.ItemRenderablePropertyBundle;
 import com.pigicial.wikirenderer.screen.RenderScreen;
+import com.pigicial.wikirenderer.screen.WikiRendererUI;
+import com.pigicial.wikirenderer.screen.owo.component.ItemComponent;
 import com.pigicial.wikirenderer.textures.PlayerTextureUtils;
 import com.pigicial.wikirenderer.textures.TextureData;
 import com.pigicial.wikirenderer.util.NullSafeUUIDTypeAdapter;
-import io.wispforest.owo.ui.component.ItemComponent;
-import io.wispforest.owo.ui.component.UIComponents;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
@@ -34,7 +34,7 @@ public class ItemFrameBasedRenderable extends FrameBasedRenderable<TextureData, 
 
     @Override
     public ItemComponent createItemComponentForPreview(FrameData<TextureData> frameData) {
-        return UIComponents.item(PlayerTextureUtils.createPlayerHead(frameData.sourceData().profile()));
+        return WikiRendererUI.item(PlayerTextureUtils.createPlayerHead(frameData.sourceData().profile()));
     }
 
     @Override

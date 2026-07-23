@@ -108,7 +108,7 @@ public class MeshRenderSection extends SectionRenderDispatcher.RenderSection {
                 if (blockState.is(Blocks.LIGHT)) continue; // axiom fix
 
                 if (mesh.world.getBlockEntity(pos) != null) {
-                    blockEntities.put(new BlockPos(pos), mesh.world.getBlockEntity(pos));
+                    blockEntities.put(new BlockPos(pos.getX(), pos.getY(), pos.getZ()), mesh.world.getBlockEntity(pos));
                 }
 
                 FluidState fluidState = mesh.world.getFluidState(pos);

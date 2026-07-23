@@ -3,18 +3,18 @@ package com.pigicial.wikirenderer.render.entity.options.types;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.pigicial.wikirenderer.components.FullWidthCollapsibleContainer;
-import com.pigicial.wikirenderer.components.MiniEditBoxComponent;
-import com.pigicial.wikirenderer.components.SearchableEntityListComponent;
+import com.pigicial.wikirenderer.screen.WikiRendererUI;
+import com.pigicial.wikirenderer.screen.components.FullWidthCollapsibleContainer;
+import com.pigicial.wikirenderer.screen.components.MiniEditBoxComponent;
+import com.pigicial.wikirenderer.screen.components.SearchableEntityListComponent;
+import com.pigicial.wikirenderer.screen.owo.component.ItemComponent;
+import com.pigicial.wikirenderer.screen.owo.container.FlowLayout;
+import com.pigicial.wikirenderer.screen.owo.container.UIContainers;
+import com.pigicial.wikirenderer.screen.owo.core.*;
 import com.pigicial.wikirenderer.textures.PlayerTextureUtils;
 import com.pigicial.wikirenderer.textures.TextureData;
 import com.pigicial.wikirenderer.util.ItemComponentEncoder;
 import com.pigicial.wikirenderer.util.Translate;
-import io.wispforest.owo.ui.component.ItemComponent;
-import io.wispforest.owo.ui.component.UIComponents;
-import io.wispforest.owo.ui.container.FlowLayout;
-import io.wispforest.owo.ui.container.UIContainers;
-import io.wispforest.owo.ui.core.*;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.commands.arguments.item.ItemInput;
 import net.minecraft.commands.arguments.item.ItemParser;
@@ -73,12 +73,12 @@ public class ItemStackOverride<S extends EntityRenderState> extends OptionalOver
         this.itemOptionsLayout.horizontalAlignment(HorizontalAlignment.LEFT);
         this.itemOptionsLayout.verticalAlignment(VerticalAlignment.CENTER);
 
-        this.itemOptionsLayout.child(UIComponents.label(Translate.gui("item")));
+        this.itemOptionsLayout.child(WikiRendererUI.label(Translate.gui("item")));
         this.itemOptionsLayout.child(this.buildItemNameComponent());
 
         ItemStack currentItem = getValue();
         if (currentItem != null && !currentItem.isEmpty()) {
-            this.itemIconComponent = UIComponents.item(currentItem);
+            this.itemIconComponent = WikiRendererUI.item(currentItem);
             this.itemOptionsLayout.child(this.itemIconComponent);
         }
 
@@ -87,7 +87,7 @@ public class ItemStackOverride<S extends EntityRenderState> extends OptionalOver
         this.playerHeadOptionsLayout = UIContainers.horizontalFlow(Sizing.content(), Sizing.content());
         this.playerHeadOptionsLayout.horizontalAlignment(HorizontalAlignment.LEFT);
         this.playerHeadOptionsLayout.verticalAlignment(VerticalAlignment.CENTER);
-        this.playerHeadOptionsLayout.child(UIComponents.label(Translate.gui("head_texture_id")));
+        this.playerHeadOptionsLayout.child(WikiRendererUI.label(Translate.gui("head_texture_id")));
         this.playerHeadOptionsLayout.child(this.buildPlayerHeadTextureComponent());
         this.playerHeadOptionsLayout.id("player_head_layout");
 
@@ -98,7 +98,7 @@ public class ItemStackOverride<S extends EntityRenderState> extends OptionalOver
         this.dyeColorOptionsLayout = UIContainers.horizontalFlow(Sizing.content(), Sizing.content());
         this.dyeColorOptionsLayout.horizontalAlignment(HorizontalAlignment.LEFT);
         this.dyeColorOptionsLayout.verticalAlignment(VerticalAlignment.CENTER);
-        this.dyeColorOptionsLayout.child(UIComponents.label(Translate.gui("dye_color")));
+        this.dyeColorOptionsLayout.child(WikiRendererUI.label(Translate.gui("dye_color")));
         this.dyeColorOptionsLayout.child(this.buildArmorColorComponent());
         this.dyeColorOptionsLayout.id("dye_color_layout");
 
@@ -195,7 +195,7 @@ public class ItemStackOverride<S extends EntityRenderState> extends OptionalOver
                 this.itemIconComponent = null;
             }
             if (newItem != null && !newItem.isEmpty()) {
-                this.itemIconComponent = UIComponents.item(newItem);
+                this.itemIconComponent = WikiRendererUI.item(newItem);
                 this.itemOptionsLayout.child(this.itemIconComponent);
             }
 

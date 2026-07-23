@@ -3,13 +3,14 @@ package com.pigicial.wikirenderer.screen;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.FramerateLimitTracker;
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.renderpearl.api.textures.FilterMode;
 import com.pigicial.wikirenderer.WikiRenderer;
-import com.pigicial.wikirenderer.components.IOStateComponent;
-import com.pigicial.wikirenderer.components.NonResettingScrollContainer;
-import com.pigicial.wikirenderer.components.NotificationComponent;
+import com.pigicial.wikirenderer.screen.components.IOStateComponent;
+import com.pigicial.wikirenderer.screen.components.NonResettingScrollContainer;
+import com.pigicial.wikirenderer.screen.components.NotificationComponent;
 import com.pigicial.wikirenderer.property.*;
 import com.pigicial.wikirenderer.property.config.WikiRendererConfigs;
 import com.pigicial.wikirenderer.render.DefaultRenderable;
@@ -36,19 +37,18 @@ import com.pigicial.wikirenderer.render.particle.ParticleDisplayCondition;
 import com.pigicial.wikirenderer.render.skyblock.frame_based.DyedArmorFrameBasedRenderable;
 import com.pigicial.wikirenderer.render.skyblock.frame_based.FrameBasedRenderable;
 import com.pigicial.wikirenderer.render.skyblock.frame_based.ItemFrameBasedRenderable;
+import com.pigicial.wikirenderer.screen.owo.base.BaseOwoScreen;
+import com.pigicial.wikirenderer.screen.owo.component.ButtonComponent;
+import com.pigicial.wikirenderer.screen.owo.component.TextBoxComponent;
+import com.pigicial.wikirenderer.screen.owo.container.FlowLayout;
+import com.pigicial.wikirenderer.screen.owo.container.ScrollContainer;
+import com.pigicial.wikirenderer.screen.owo.container.UIContainers;
+import com.pigicial.wikirenderer.screen.owo.core.*;
+import com.pigicial.wikirenderer.screen.owo.util.FocusHandler;
 import com.pigicial.wikirenderer.textures.TextureData;
 import com.pigicial.wikirenderer.textures.TextureDataProvider;
 import com.pigicial.wikirenderer.util.Translate;
 import com.pigicial.wikirenderer.util.compatibility.ShaderCheck;
-import io.wispforest.owo.ui.base.BaseOwoScreen;
-import io.wispforest.owo.ui.component.ButtonComponent;
-import io.wispforest.owo.ui.component.TextBoxComponent;
-import io.wispforest.owo.ui.component.UIComponents;
-import io.wispforest.owo.ui.container.FlowLayout;
-import io.wispforest.owo.ui.container.ScrollContainer;
-import io.wispforest.owo.ui.container.UIContainers;
-import io.wispforest.owo.ui.core.*;
-import io.wispforest.owo.ui.util.FocusHandler;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.ChatFormatting;
@@ -72,7 +72,6 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2f;
 import org.joml.Matrix4fStack;
 import org.jspecify.annotations.NonNull;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.HashSet;
 import java.util.List;
@@ -86,18 +85,18 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
     private static final Int2ObjectMap<Consumer<DefaultPropertyBundle>> KEYBOARD_CONTROLS = new Int2ObjectOpenHashMap<>();
 
     static {
-        KEYBOARD_CONTROLS.put(GLFW.GLFW_KEY_W, properties -> properties.yOffset.modify(-1000));
-        KEYBOARD_CONTROLS.put(GLFW.GLFW_KEY_S, properties -> properties.yOffset.modify(1000));
-        KEYBOARD_CONTROLS.put(GLFW.GLFW_KEY_D, properties -> properties.xOffset.modify(1000));
-        KEYBOARD_CONTROLS.put(GLFW.GLFW_KEY_A, properties -> properties.xOffset.modify(-1000));
+        KEYBOARD_CONTROLS.put(InputConstants.KEY_W, properties -> properties.yOffset.modify(-1000));
+        KEYBOARD_CONTROLS.put(InputConstants.KEY_S, properties -> properties.yOffset.modify(1000));
+        KEYBOARD_CONTROLS.put(InputConstants.KEY_D, properties -> properties.xOffset.modify(1000));
+        KEYBOARD_CONTROLS.put(InputConstants.KEY_A, properties -> properties.xOffset.modify(-1000));
 
-        KEYBOARD_CONTROLS.put(GLFW.GLFW_KEY_UP, properties -> properties.modifySlant(-5D));
-        KEYBOARD_CONTROLS.put(GLFW.GLFW_KEY_DOWN, properties -> properties.modifySlant(5D));
-        KEYBOARD_CONTROLS.put(GLFW.GLFW_KEY_LEFT, properties -> properties.modifyRotation(-10));
-        KEYBOARD_CONTROLS.put(GLFW.GLFW_KEY_RIGHT, properties -> properties.modifyRotation(10));
+        KEYBOARD_CONTROLS.put(InputConstants.KEY_UP, properties -> properties.modifySlant(-5D));
+        KEYBOARD_CONTROLS.put(InputConstants.KEY_DOWN, properties -> properties.modifySlant(5D));
+        KEYBOARD_CONTROLS.put(InputConstants.KEY_LEFT, properties -> properties.modifyRotation(-10));
+        KEYBOARD_CONTROLS.put(InputConstants.KEY_RIGHT, properties -> properties.modifyRotation(10));
 
-        KEYBOARD_CONTROLS.put(GLFW.GLFW_KEY_RIGHT_BRACKET, properties -> properties.scale.modify(10));
-        KEYBOARD_CONTROLS.put(GLFW.GLFW_KEY_SLASH, properties -> properties.scale.modify(-10));
+        KEYBOARD_CONTROLS.put(InputConstants.KEY_RBRACKET, properties -> properties.scale.modify(10));
+        KEYBOARD_CONTROLS.put(InputConstants.KEY_SLASH, properties -> properties.scale.modify(-10));
     }
 
     public final MemoryGuard memoryGuard = new MemoryGuard(0.75f);
@@ -301,7 +300,7 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
         GlobalProperties globalProperties = GlobalProperties.get();
         WikiRendererUI.booleanControl(rightColumn, globalProperties.useCustomFFmpegPath, "use_custom_ffmpeg_path");
         globalProperties.useCustomFFmpegPath.addRebuildListener(this);
-        globalProperties.useCustomFFmpegPath.futureListen(this, (pro, value) -> {
+        globalProperties.useCustomFFmpegPath.futureListen(this, (_, value) -> {
             if (value && globalProperties.customFFmpegPath.isBlank()) return; // turning on for first time, don't check
             this.detectFFmpeg(true);
         });
@@ -311,7 +310,7 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
             editBox.onChanged().subscribe(path -> globalProperties.customFFmpegPath = path);
 
             try (WikiRendererUI.RowBuilder builder = WikiRendererUI.autoNewLineRow(rightColumn)) {
-                this.refreshCustomFFmpegPathButton = UIComponents.button(Translate.gui("check_ffmpeg_path"), comp -> this.detectFFmpeg(true));
+                this.refreshCustomFFmpegPathButton = WikiRendererUI.button(Translate.gui("check_ffmpeg_path"), _ -> this.detectFFmpeg(true));
                 builder.row.child(refreshCustomFFmpegPathButton);
 
                 WikiRendererUI.dynamicText(builder.row, () -> {
@@ -334,7 +333,7 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
             if (currentAnimationExportData != null) return;
             FFmpegDispatcher.tryCustomPathAgain = true;
         }
-        FFmpegDispatcher.detectFFmpeg().whenComplete((aBoolean, throwable) -> {
+        FFmpegDispatcher.detectFFmpeg().whenComplete((_, throwable) -> {
             this.guiRebuildScheduled = true;
             if (throwable != null) {
                 this.minecraft.execute(() -> this.notify(
@@ -348,7 +347,7 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
     private boolean buildGifskiLoadingOrFailedSection() {
         if (!GifskiDispatcher.wasGifskiCopiedToTempPath()) {
             WikiRendererUI.text(rightColumn, "copying_gifski", false);
-            GifskiDispatcher.createGifskiTemporaryPath().whenComplete((aBoolean, throwable) -> {
+            GifskiDispatcher.createGifskiTemporaryPath().whenComplete((_, throwable) -> {
                 this.guiRebuildScheduled = true;
                 if (throwable != null) {
                     this.minecraft.execute(() -> this.notify(
@@ -407,7 +406,7 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
 
         GlobalProperties globalProperties = GlobalProperties.get();
         try (WikiRendererUI.RowBuilder builder = WikiRendererUI.autoNewLineRow(rightColumn)) {
-            this.exportAnimationButton = UIComponents.button(Translate.gui("export_animation"), button -> this.queueAnimationExport());
+            this.exportAnimationButton = WikiRendererUI.button(Translate.gui("export_animation"), _ -> this.queueAnimationExport());
 
             if (WikiRenderer.currentAnimationHandler != null) {
                 exportAnimationButton.active = false;
@@ -419,7 +418,7 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
             }
 
             builder.row.child(this.exportAnimationButton.margins(Insets.right(5)));
-            builder.row.child(UIComponents.button(Translate.gui("format." + globalProperties.animationFormat.extension), button -> {
+            builder.row.child(WikiRendererUI.button(Translate.gui("format." + globalProperties.animationFormat.extension), button -> {
                 globalProperties.animationFormat = globalProperties.animationFormat.next();
                 button.setMessage(Translate.gui("format." + globalProperties.animationFormat.extension));
                 guiRebuildScheduled = true;
@@ -500,7 +499,7 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
             globalProperties.speedUpEnchantmentGlints.futureListen(this, (_, _) -> guiRebuildScheduled = true);
 
             if (globalProperties.speedUpEnchantmentGlints.get()) {
-                rightColumn.child(UIComponents.button(Translate.gui("enchantment_glint_preset"), _ -> {
+                rightColumn.child(WikiRendererUI.button(Translate.gui("enchantment_glint_preset"), _ -> {
                     int seconds = 120000 / 8000;
                     int framerate = 20;
                     globalProperties.exportFramerate.set(framerate);
@@ -522,7 +521,7 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
                 case LIVE_FFMPEG -> Translate.gui("animation_mode_selected_live_ffmpeg");
             }).margins(Insets.of(10, 0, 5, 0));
 
-            rightColumn.child(UIComponents.dropdown(Sizing.content())
+            rightColumn.child(WikiRendererUI.dropdown(Sizing.content())
                     .button(Translate.gui("animation_mode_name_live_ffmpeg"), _ -> globalProperties.animationHandlingMode = FFmpegAnimationHandlingMode.LIVE_FFMPEG)
                     .text(Translate.gui("animation_mode_description_live_ffmpeg_1"))
                     .text(Translate.gui("animation_mode_description_live_ffmpeg_2"))
@@ -535,7 +534,6 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
 
                     .closeWhenNotHovered(false)
                     .padding(Insets.of(5))
-                    .surface(Surface.blur(10, 20))
             );
 
             this.buildFFmpegCustomPathSection();
@@ -788,17 +786,17 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
 
         if (this.isInViewport(click.x())) {
             int button = click.button();
-            if (button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
+            if (button == InputConstants.MOUSE_BUTTON_MIDDLE) {
                 double xScaling = (100d / properties.scale.get()) * (this.minecraft.getWindow().getScreenWidth() / (float) this.minecraft.getWindow().getGuiScaledWidth());
                 double yScaling = (100d / properties.scale.get()) * (this.minecraft.getWindow().getScreenHeight() / (float) this.minecraft.getWindow().getGuiScaledHeight());
 
                 properties.xOffset.modify((int) (50 * offsetX * xScaling));
                 properties.yOffset.modify((int) (50 * offsetY * yScaling));
                 return true;
-            } else if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            } else if (button == InputConstants.MOUSE_BUTTON_LEFT) {
                 properties.modifyRotation((int) (offsetX * 2));
                 return true;
-            } else if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+            } else if (button == InputConstants.MOUSE_BUTTON_RIGHT) {
                 properties.modifySlant(offsetY * 2);
                 return true;
             }
@@ -825,12 +823,12 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
 
             if (click.hasControlDown()) {
                 int button = click.button();
-                if (button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
+                if (button == InputConstants.MOUSE_BUTTON_MIDDLE) {
                     properties.xOffset.setToDefault();
                     properties.yOffset.setToDefault();
-                } else if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                } else if (button == InputConstants.MOUSE_BUTTON_LEFT) {
                     properties.rotation.setToDefault();
-                } else if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+                } else if (button == InputConstants.MOUSE_BUTTON_RIGHT) {
                     properties.slant.setToDefault();
                 }
                 return true;
@@ -859,9 +857,9 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
 
         int keyCode = input.key();
 
-        if (keyCode == GLFW.GLFW_KEY_F12) {
+        if (keyCode == InputConstants.KEY_F12) {
             this.captureScheduled = true;
-        } else if (keyCode == GLFW.GLFW_KEY_F10) {
+        } else if (keyCode == InputConstants.KEY_F10) {
             this.drawOnlyBackground = !this.drawOnlyBackground;
         } else if (KEYBOARD_CONTROLS.containsKey(keyCode) && this.renderable instanceof DefaultRenderable) {
             FocusHandler focusHandler = this.uiAdapter.rootComponent.focusHandler();

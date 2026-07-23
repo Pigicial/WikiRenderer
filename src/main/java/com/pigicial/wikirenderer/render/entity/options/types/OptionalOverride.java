@@ -1,13 +1,13 @@
 package com.pigicial.wikirenderer.render.entity.options.types;
 
-import com.pigicial.wikirenderer.components.SearchableEntityListComponent;
-import io.wispforest.owo.ui.container.FlowLayout;
-import io.wispforest.owo.ui.container.GridLayout;
-import io.wispforest.owo.ui.container.UIContainers;
-import io.wispforest.owo.ui.core.HorizontalAlignment;
-import io.wispforest.owo.ui.core.Sizing;
-import io.wispforest.owo.ui.core.UIComponent;
-import io.wispforest.owo.ui.core.VerticalAlignment;
+import com.pigicial.wikirenderer.screen.components.SearchableEntityListComponent;
+import com.pigicial.wikirenderer.screen.owo.container.FlowLayout;
+import com.pigicial.wikirenderer.screen.owo.container.GridLayout;
+import com.pigicial.wikirenderer.screen.owo.container.UIContainers;
+import com.pigicial.wikirenderer.screen.owo.core.HorizontalAlignment;
+import com.pigicial.wikirenderer.screen.owo.core.Sizing;
+import com.pigicial.wikirenderer.screen.owo.core.UIComponent;
+import com.pigicial.wikirenderer.screen.owo.core.VerticalAlignment;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.network.chat.Component;
 

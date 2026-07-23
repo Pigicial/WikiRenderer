@@ -1,6 +1,7 @@
 package com.pigicial.wikirenderer.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.renderpearl.api.commands.RenderPass;
 import com.pigicial.wikirenderer.property.CroppablePropertyBundle;
 import com.pigicial.wikirenderer.property.PropertyBundle;
 import com.pigicial.wikirenderer.render.export.ExportPathSpec;
@@ -8,6 +9,7 @@ import com.pigicial.wikirenderer.render.particle.ParticleDisplayCondition;
 import com.pigicial.wikirenderer.screen.RenderScreen;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4fStack;
 
@@ -21,7 +23,11 @@ public interface Renderable<P extends PropertyBundle> {
 
     void emitVerticesThenDraw(RenderScreen renderScreen, Matrix4fStack modelViewStack, PoseStack poseStack, float tickDelta, long timeSinceCreationMs);
 
-    void drawSubmittedRenderFeatures();
+    default void drawSubmittedRenderFeatures() {
+        drawSubmittedRenderFeatures(null, null);
+    }
+
+    void drawSubmittedRenderFeatures(@Nullable RenderPass pass, @Nullable FeatureRenderDispatcher.PreparedFrame frame);
 
     P getProperties();
 

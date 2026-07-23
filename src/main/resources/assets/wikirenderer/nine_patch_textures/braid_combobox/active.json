@@ -1,0 +1,16 @@
+{
+  "texture": "wikirenderer:textures/gui/braid_combobox.png",
+  "texture_size": {
+    "width": 64,
+    "height": 192
+  },
+  "repeat": true,
+  "corner_patch_size": {
+    "width": 18,
+    "height": 4
+  },
+  "center_patch_size": {
+    "width": 28,
+    "height": 56
+  }
+}

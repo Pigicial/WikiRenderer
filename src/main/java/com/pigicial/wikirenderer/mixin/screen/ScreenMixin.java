@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class ScreenMixin {
 
     @Inject(method = "extractBackground", at = @At("HEAD"), cancellable = true)
-    private void wikirenderer$skipBackground(GuiGraphicsExtractor guiGraphics, int i, int j, float f, CallbackInfo ci) {
+    private void wikirenderer$skipBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a, CallbackInfo ci) {
         if (WikiRenderer.inContainerScreenDraw) {
             ci.cancel();
         }

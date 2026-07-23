@@ -63,6 +63,11 @@ public class EntityVertexPositionTracker implements VertexConsumer {
     }
 
     @Override
+    public @NonNull VertexConsumer setUv3(float u, float v) {
+        return this;
+    }
+
+    @Override
     public @NonNull VertexConsumer setNormal(float f, float g, float h) {
         return this;
     }

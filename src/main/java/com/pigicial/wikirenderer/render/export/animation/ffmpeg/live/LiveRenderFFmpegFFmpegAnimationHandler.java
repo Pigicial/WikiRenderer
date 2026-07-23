@@ -1,6 +1,6 @@
 package com.pigicial.wikirenderer.render.export.animation.ffmpeg.live;
 
-import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.renderpearl.api.textures.GpuTexture;
 import com.pigicial.wikirenderer.WikiRenderer;
 import com.pigicial.wikirenderer.property.GlobalProperties;
 import com.pigicial.wikirenderer.render.Renderable;

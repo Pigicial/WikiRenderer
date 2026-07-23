@@ -1,9 +1,9 @@
 package com.pigicial.wikirenderer.render.item;
 
 import com.pigicial.wikirenderer.screen.WikiRendererUI;
+import com.pigicial.wikirenderer.screen.owo.container.FlowLayout;
 import com.pigicial.wikirenderer.util.AnimationTimingUtil;
 import com.pigicial.wikirenderer.util.Translate;
-import io.wispforest.owo.ui.container.FlowLayout;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 

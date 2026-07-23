@@ -10,11 +10,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Util;
 import org.w3c.dom.NodeList;
 
-import javax.imageio.IIOImage;
-import javax.imageio.ImageIO;
-import javax.imageio.ImageTypeSpecifier;
-import javax.imageio.ImageWriteParam;
-import javax.imageio.ImageWriter;
+import javax.imageio.*;
 import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.metadata.IIOMetadataNode;
 import javax.imageio.stream.ImageOutputStream;

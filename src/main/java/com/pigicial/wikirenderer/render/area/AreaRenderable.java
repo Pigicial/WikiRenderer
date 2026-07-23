@@ -2,8 +2,9 @@ package com.pigicial.wikirenderer.render.area;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.renderpearl.api.commands.RenderPass;
 import com.pigicial.wikirenderer.WikiRenderer;
-import com.pigicial.wikirenderer.components.EntityTypeSpecificPropertiesComponent;
+import com.pigicial.wikirenderer.screen.components.EntityTypeSpecificPropertiesComponent;
 import com.pigicial.wikirenderer.mixin.access.GameRendererAccessor;
 import com.pigicial.wikirenderer.mixin.access.ItemStackRenderStateAccessor;
 import com.pigicial.wikirenderer.mixin.access.LevelRendererAccessor;
@@ -40,6 +41,7 @@ import net.minecraft.client.renderer.GlobalSettingsUniform;
 import net.minecraft.client.renderer.SubmitNodeStorage;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.state.*;
+import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.resources.DefaultPlayerSkin;
@@ -59,6 +61,8 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4fStack;
 
 import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -164,7 +168,7 @@ public class AreaRenderable extends DefaultRenderable<AreaPropertyBundle> implem
                 client.getWindow().getGuiScaledHeight(),
                 1.0,
                 shaderAnimationTicks,
-                client.getDeltaTracker(), 0,
+                client.getDeltaTracker().getGameTimeDeltaPartialTick(false), 0,
                 new Vec3(0, 0, 0), // Passing a new/empty camera sets pos to 0,0,0
                 false
         );
@@ -183,9 +187,9 @@ public class AreaRenderable extends DefaultRenderable<AreaPropertyBundle> implem
         BlockPos minCorner = mesh.bounds.getMinCorner();
 
         // this could be better but whatever
-        Runnable preTranslucencyTask = () -> {
+        BiConsumer<RenderPass, FeatureRenderDispatcher.PreparedFrame> preTranslucencyTask = (pass, frame) -> {
             if (!properties.hideMesh.get()) {
-                this.mesh.drawBlockEntities(standardStack, nodeStorage, cameraRenderState, tickDelta);
+                this.mesh.drawBlockEntities(standardStack, nodeStorage, cameraRenderState, tickDelta, pass, frame);
             }
 
             if (client.player != null) {
@@ -201,7 +205,7 @@ public class AreaRenderable extends DefaultRenderable<AreaPropertyBundle> implem
 
             drawnVertexBoundCache.clear();
             if (!properties.hideEntities.get()) {
-                this.drawEntities(cameraRenderState, tickDelta, standardStack, nodeStorage);
+                this.drawEntities(cameraRenderState, tickDelta, standardStack, nodeStorage, pass, frame);
             }
         };
 
@@ -213,7 +217,7 @@ public class AreaRenderable extends DefaultRenderable<AreaPropertyBundle> implem
 
             this.mesh.drawBlocks(meshStack, preTranslucencyTask);
         } else {
-            preTranslucencyTask.run(); // run otherwise above
+            preTranslucencyTask.accept(null, null); // run otherwise above
         }
 
         WikiRenderer.inAreaRenderDraw = false;
@@ -275,7 +279,8 @@ public class AreaRenderable extends DefaultRenderable<AreaPropertyBundle> implem
         this.entitiesFrozen = false;
     }
 
-    private void drawEntities(CameraRenderState cameraRenderState, float delta, PoseStack standardStack, SubmitNodeStorage nodeStorage) {
+    private void drawEntities(CameraRenderState cameraRenderState, float delta, PoseStack standardStack, SubmitNodeStorage nodeStorage,
+                              @Nullable RenderPass pass, @Nullable FeatureRenderDispatcher.PreparedFrame frame) {
         float tickDelta = entitiesFrozen ? 0 : delta;
         AreaPropertyBundle properties = this.getProperties();
         EntityRenderDispatcher entityDispatcher = client.getEntityRenderDispatcher();
@@ -312,7 +317,7 @@ public class AreaRenderable extends DefaultRenderable<AreaPropertyBundle> implem
             WikiRenderer.animationTimingDataRequestedToFill = null;
 
         });
-        super.drawSubmittedRenderFeatures();
+        super.drawSubmittedRenderFeatures(pass, frame);
 
         this.lastSeenEntityAnimationTimings = animationTimingsToFill;
         WikiRenderer.animationTimingDataRequestedToFill = null;

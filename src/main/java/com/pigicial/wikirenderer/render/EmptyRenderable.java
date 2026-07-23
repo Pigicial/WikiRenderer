@@ -1,10 +1,12 @@
 package com.pigicial.wikirenderer.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.renderpearl.api.commands.RenderPass;
 import com.pigicial.wikirenderer.property.PropertyBundle;
 import com.pigicial.wikirenderer.render.export.ExportPathSpec;
 import com.pigicial.wikirenderer.screen.RenderScreen;
-import io.wispforest.owo.ui.container.FlowLayout;
+import com.pigicial.wikirenderer.screen.owo.container.FlowLayout;
+import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4fStack;
 
@@ -33,7 +35,7 @@ public class EmptyRenderable implements Renderable<PropertyBundle> {
     public void setupLighting() {}
 
     @Override
-    public void drawSubmittedRenderFeatures() {}
+    public void drawSubmittedRenderFeatures(@Nullable RenderPass pass, @Nullable FeatureRenderDispatcher.PreparedFrame frame) {}
 
     @Override
     public PropertyBundle getProperties() {

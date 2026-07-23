@@ -1,19 +1,21 @@
 package com.pigicial.wikirenderer.render.area;
 
-import com.mojang.blaze3d.IndexType;
-import com.mojang.blaze3d.PrimitiveTopology;
-import com.mojang.blaze3d.buffers.GpuBuffer;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
-import com.mojang.blaze3d.systems.RenderPass;
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.AddressMode;
-import com.mojang.blaze3d.textures.FilterMode;
-import com.mojang.blaze3d.textures.GpuSampler;
-import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
+import com.mojang.renderpearl.api.commands.RenderPass;
+import com.mojang.renderpearl.api.pipeline.IndexType;
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
+import com.mojang.renderpearl.api.textures.AddressMode;
+import com.mojang.renderpearl.api.textures.FilterMode;
+import com.mojang.renderpearl.api.textures.GpuSampler;
+import com.mojang.renderpearl.api.textures.GpuTextureView;
+import com.mojang.renderpearl.api.vertex.VertexFormat;
 import com.pigicial.wikirenderer.WikiRenderer;
+import com.pigicial.wikirenderer.mixin.access.LevelRendererAccessor;
 import com.pigicial.wikirenderer.render.OrthographicSort;
 import com.pigicial.wikirenderer.render.area.bounds.MeshBounds;
 import com.pigicial.wikirenderer.render.area.side_view.WalkabilityFilter;
@@ -32,18 +34,21 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.state.BeaconRenderState;
 import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
 import net.minecraft.client.renderer.chunk.*;
+import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.BlockDestructionProgress;
 import net.minecraft.util.Util;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
 
 // todo: not a fan of how entities are handled in AreaRenderable and blocks are here, maybe they should be merged
 public class WorldBlockMesh {
@@ -105,7 +110,7 @@ public class WorldBlockMesh {
         return !currentlyFullyBuilding;
     }
 
-    public void drawBlocks(PoseStack matrices, Runnable preTranslucencyTask) {
+    public void drawBlocks(PoseStack matrices, BiConsumer<RenderPass, FeatureRenderDispatcher.PreparedFrame> preTranslucencyTask) {
         if (!this.getMeshState().canRender) {
             throw new IllegalStateException("World mesh not prepared!");
         }
@@ -137,13 +142,34 @@ public class WorldBlockMesh {
 
         ChunkSectionsToRender sections = prepareBlockLayers(matrices.last().pose());
 
-        for (ChunkSectionLayerGroup sectionLayer : new ChunkSectionLayerGroup[]{ChunkSectionLayerGroup.OPAQUE, ChunkSectionLayerGroup.TRANSLUCENT}) {
-            if (sectionLayer == ChunkSectionLayerGroup.TRANSLUCENT) {
-                preTranslucencyTask.run();
+        /*
+        private RenderTarget overrideFramebuffer(ChunkSectionLayerGroup instance, Operation<RenderTarget> original) {
+		if (WikiRenderer.mainTargetOverride != null) return WikiRenderer.mainTargetOverride;
+		return instance.outputTarget();
+	}
+         */
+
+
+        RenderTarget mainTarget = WikiRenderer.mainTargetOverride == null ? Minecraft.getInstance().gameRenderer.mainRenderTarget() : WikiRenderer.mainTargetOverride;
+
+        SubmitNodeStorage submitNodeStorage = ((LevelRendererAccessor) Minecraft.getInstance().levelRenderer).wikirenderer$getSubmitNodeStorage();
+        FeatureRenderDispatcher featureRenderDispatcher = Minecraft.getInstance().gameRenderer.featureRenderDispatcher();
+        try (FeatureRenderDispatcher.PreparedFrame frame = featureRenderDispatcher.prepareFrame(submitNodeStorage)) {
+            try (RenderPass renderPass = RenderSystem.getDevice()
+                    .createCommandEncoder()
+                    .createRenderPass(() -> "Mesh Main", mainTarget.getColorTextureView(), Optional.empty(), mainTarget.getDepthTextureView(), OptionalDouble.empty())) {
+                RenderSystem.bindDefaultUniforms(renderPass);
+
+                for (ChunkSectionLayerGroup sectionLayer : new ChunkSectionLayerGroup[]{ChunkSectionLayerGroup.OPAQUE, ChunkSectionLayerGroup.TRANSLUCENT}) {
+                    if (sectionLayer == ChunkSectionLayerGroup.TRANSLUCENT) {
+                        preTranslucencyTask.accept(renderPass, frame);
+                    }
+                    overrideTerrainTransparencyRenderPipelines = sectionLayer == ChunkSectionLayerGroup.OPAQUE;
+                    sections.renderGroup(sectionLayer, renderPass, terrainSampler, false);
+                }
             }
-            overrideTerrainTransparencyRenderPipelines = sectionLayer == ChunkSectionLayerGroup.OPAQUE;
-            sections.renderGroup(sectionLayer, terrainSampler);
         }
+
 
         sectionRenderDispatcher.lock();
         try {
@@ -252,7 +278,8 @@ public class WorldBlockMesh {
         return new ChunkSectionsToRender(gpuTextureView, drawGroups, largestIndexCount, gpuBufferSlices);
     }
 
-    public void drawBlockEntities(PoseStack standardStack, SubmitNodeStorage nodeStorage, CameraRenderState cameraRenderState, float tickDelta) {
+    public void drawBlockEntities(PoseStack standardStack, SubmitNodeStorage nodeStorage, CameraRenderState cameraRenderState, float tickDelta,
+                                  @Nullable RenderPass pass, @Nullable FeatureRenderDispatcher.PreparedFrame frame) {
         BlockPos minCorner = bounds.getMinCorner();
         standardStack.pushPose();
         standardStack.translate(-minCorner.getX(), -minCorner.getY(), -minCorner.getZ());
@@ -290,7 +317,7 @@ public class WorldBlockMesh {
         }
 
         standardStack.popPose();
-        renderable.drawSubmittedRenderFeatures();
+        renderable.drawSubmittedRenderFeatures(pass, frame);
         EntityCullingCheck.reEnableBlockEntityCullingIfNecessary();
     }
 

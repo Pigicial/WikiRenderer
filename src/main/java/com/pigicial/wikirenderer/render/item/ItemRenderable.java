@@ -1,5 +1,6 @@
 package com.pigicial.wikirenderer.render.item;
 
+import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.pigicial.wikirenderer.WikiRenderer;
 import com.pigicial.wikirenderer.mixin.access.ItemStackRenderStateAccessor;
@@ -15,7 +16,6 @@ import com.pigicial.wikirenderer.textures.TextureDataProvider;
 import com.pigicial.wikirenderer.util.AnimationTimingUtil;
 import com.pigicial.wikirenderer.util.ItemNameUtil;
 import net.minecraft.client.Minecraft;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.client.renderer.SubmitNodeStorage;
 import net.minecraft.client.renderer.item.ItemModel;
 import net.minecraft.client.renderer.item.ItemModelResolver;

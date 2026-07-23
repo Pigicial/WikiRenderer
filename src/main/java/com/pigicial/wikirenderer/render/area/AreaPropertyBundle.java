@@ -2,9 +2,10 @@ package com.pigicial.wikirenderer.render.area;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Axis;
-import com.pigicial.wikirenderer.components.AutoResizingLabelComponent;
-import com.pigicial.wikirenderer.components.ConditionalButton;
-import com.pigicial.wikirenderer.components.SearchableEntityListComponent;
+import com.pigicial.wikirenderer.screen.owo.component.*;
+import com.pigicial.wikirenderer.screen.components.AutoResizingLabelComponent;
+import com.pigicial.wikirenderer.screen.components.ConditionalButton;
+import com.pigicial.wikirenderer.screen.components.SearchableEntityListComponent;
 import com.pigicial.wikirenderer.mixin.access.LivingEntityRendererAccessor;
 import com.pigicial.wikirenderer.property.*;
 import com.pigicial.wikirenderer.property.config.WikiRendererConfigs;
@@ -15,11 +16,13 @@ import com.pigicial.wikirenderer.render.area.side_view.MeshSideRotation;
 import com.pigicial.wikirenderer.render.area.side_view.MeshSideSlant;
 import com.pigicial.wikirenderer.screen.RenderScreen;
 import com.pigicial.wikirenderer.screen.WikiRendererUI;
+import com.pigicial.wikirenderer.screen.owo.container.FlowLayout;
+import com.pigicial.wikirenderer.screen.owo.core.Color;
+import com.pigicial.wikirenderer.screen.owo.core.Insets;
+import com.pigicial.wikirenderer.screen.owo.core.Sizing;
+import com.pigicial.wikirenderer.screen.owo.core.UIComponent;
 import com.pigicial.wikirenderer.util.ClipboardUtil;
 import com.pigicial.wikirenderer.util.Translate;
-import io.wispforest.owo.ui.component.*;
-import io.wispforest.owo.ui.container.FlowLayout;
-import io.wispforest.owo.ui.core.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -257,7 +260,7 @@ public class AreaPropertyBundle extends DefaultCroppablePropertyBundle implement
                             }, renderable.mesh::canRebuild));
 
 
-                            rowBuilder.row.child(UIComponents.label(Translate.gui(expansionSide.name().toLowerCase())).margins(Insets.of(0, 0, 10, 10)));
+                            rowBuilder.row.child(WikiRendererUI.label(Translate.gui(expansionSide.name().toLowerCase())).margins(Insets.of(0, 0, 10, 10)));
                         }
                     }
                 }
@@ -338,10 +341,9 @@ public class AreaPropertyBundle extends DefaultCroppablePropertyBundle implement
             }
 
             WikiRendererUI.text(container, "selected_entity_refresh_mode", false).margins(Insets.of(10, 0, 5, 0));
-            DropdownComponent refreshModeOptionsComponent = UIComponents.dropdown(Sizing.content());
+            DropdownComponent refreshModeOptionsComponent = WikiRendererUI.dropdown(Sizing.content());
             refreshModeOptionsComponent.closeWhenNotHovered(false);
             refreshModeOptionsComponent.padding(Insets.of(5));
-            refreshModeOptionsComponent.surface(Surface.blur(10, 20));
 
             for (AreaEntityRefreshMode refreshMode : AreaEntityRefreshMode.values()) {
                 MutableComponent text = Translate.gui("entity_refresh_mode_" + refreshMode.name().toLowerCase());

@@ -8,12 +8,12 @@ import net.minecraft.client.model.Model;
 import net.minecraft.client.renderer.SubmitNodeCollection;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
-import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.texture.UvMapping;
 import net.minecraft.client.resources.model.ModelBakery;
-import net.minecraft.client.resources.model.geometry.BakedQuad;
+import net.minecraft.client.resources.model.geometry.ItemQuads;
 import net.minecraft.client.resources.model.sprite.AtlasManager;
 import net.minecraft.world.item.ItemDisplayContext;
 import org.joml.Quaternionf;
@@ -29,9 +29,9 @@ import java.util.List;
 public class SubmitNodeCollectionMixin {
 
     @Inject(method = "submitModel", at = @At(value = "HEAD"))
-    public <S> void wikirenderer$onSubmitModel(Model<? super S> model, S state, PoseStack poseStack, RenderType renderType, int lightCoords, int overlayCoords, int tintedColor, @Nullable TextureAtlasSprite sprite, int outlineColor, ModelFeatureRenderer.@Nullable CrumblingOverlay crumblingOverlay, CallbackInfo ci) {
-        if (WikiRenderer.animationTimingDataRequestedToFill != null && sprite != null) {
-            AnimationTimingUtil.fillTimings(sprite, WikiRenderer.animationTimingDataRequestedToFill);
+    public <S> void wikirenderer$onSubmitModel(Model<? super S> model, S state, PoseStack poseStack, RenderType renderType, int lightCoords, int overlayCoords, int tintedColor, @Nullable UvMapping uvMapping, int outlineColor, CallbackInfo ci) {
+        if (WikiRenderer.animationTimingDataRequestedToFill != null && uvMapping != null) {
+            AnimationTimingUtil.fillTimings(uvMapping, WikiRenderer.animationTimingDataRequestedToFill);
         }
     }
 
@@ -43,7 +43,7 @@ public class SubmitNodeCollectionMixin {
     }
 
     @Inject(method = "submitItem", at = @At(value = "HEAD"))
-    public void wikirenderer$onSubmitItem(PoseStack poseStack, ItemDisplayContext displayContext, int lightCoords, int overlayCoords, int outlineColor, int[] tintLayers, List<BakedQuad> quads, ItemStackRenderState.FoilType foilType, CallbackInfo ci) {
+    public void wikirenderer$onSubmitItem(PoseStack poseStack, ItemDisplayContext displayContext, int lightCoords, int overlayCoords, int outlineColor, int[] tintLayers, ItemQuads quads, ItemStackRenderState.FoilType foilType, CallbackInfo ci) {
         if (WikiRenderer.animationTimingDataRequestedToFill != null && !quads.isEmpty()) {
             AnimationTimingUtil.fillTimings(quads, WikiRenderer.animationTimingDataRequestedToFill);
         }

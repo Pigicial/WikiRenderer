@@ -4,3 +4,12 @@ accessible field net/minecraft/client/renderer/texture/SpriteContents$AnimatedTe
 accessible class net/minecraft/client/renderer/texture/SpriteContents$FrameInfo
 accessible class net/minecraft/client/particle/ElderGuardianParticleGroup$ElderGuardianParticleRenderState
 accessible class net/minecraft/client/particle/ElderGuardianParticleGroup$State
+accessible class net/minecraft/client/renderer/rendertype/RenderSetup$TextureBinding
+accessible field net/minecraft/client/renderer/item/ItemStackRenderState$LayerRenderState quads Lnet/minecraft/client/resources/model/geometry/ItemQuads;
+
+accessible method net/minecraft/client/gui/components/MultiLineEditBox <init> (Lnet/minecraft/client/gui/Font;IIIILnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/Component;IZIZZ)V
+accessible method net/minecraft/client/gui/screens/Screen addRenderableWidget (Lnet/minecraft/client/gui/components/events/GuiEventListener;)Lnet/minecraft/client/gui/components/events/GuiEventListener;
+accessible method net/minecraft/client/gui/GuiGraphicsExtractor setTooltipForNextFrameInternal (Lnet/minecraft/client/gui/Font;Ljava/util/List;IILnet/minecraft/client/gui/screens/inventory/tooltip/ClientTooltipPositioner;Lnet/minecraft/resources/Identifier;Z)V
+accessible method net/minecraft/client/gui/GuiGraphicsExtractor componentHoverEffect (Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Style;II)V
+accessible method net/minecraft/client/gui/components/Checkbox <init> (IIILnet/minecraft/network/chat/Component;Lnet/minecraft/client/gui/Font;ZLnet/minecraft/client/gui/components/Checkbox$OnValueChange;)V
+accessible class net/minecraft/client/gui/render/GuiRenderer$Draw
