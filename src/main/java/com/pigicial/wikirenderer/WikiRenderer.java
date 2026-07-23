@@ -32,6 +32,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.Lightmap;
 import net.minecraft.client.renderer.ProjectionMatrixBuffer;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackType;
@@ -68,12 +69,11 @@ public class WikiRenderer implements ClientModInitializer {
     public static boolean inBoundsCalculation = false;
 
     public static RenderTarget mainTargetOverride = null;
-
 	public static ProjectionType prevProjectionType = null;
 	public static GpuBufferSlice prevProjectionMatrix = null;
-
 	public static GpuBufferSlice renderableDrawProjectionBuffer = null;
     public static OrthographicSort orthographicSorting = null;
+    public static Lightmap alternateLightmap = null;
 
     @Override
     public void onInitializeClient() {

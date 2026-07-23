@@ -29,7 +29,6 @@ public abstract class DefaultRenderable<P extends DefaultPropertyBundle> impleme
 
     protected static final int LIGHTING_UBO_SIZE = new Std140SizeCalculator().putVec3().putVec3().get();
 
-    protected Lightmap lightmap = new Lightmap();
     protected GpuBuffer lightingBuffer;
     protected String customFileName = null;
 
@@ -84,11 +83,10 @@ public abstract class DefaultRenderable<P extends DefaultPropertyBundle> impleme
         LightmapRenderState renderState = new LightmapRenderState();
         extractor.extract(renderState, 1.0F);
 
-        // todo this could probably be better
-        if (this.lightmap == null) {
-            this.lightmap = new Lightmap();
+        if (WikiRenderer.alternateLightmap == null) {
+            WikiRenderer.alternateLightmap = new Lightmap();
         }
-        this.lightmap.render(renderState);
+        WikiRenderer.alternateLightmap.render(renderState);
     }
 
     @Override
@@ -109,9 +107,9 @@ public abstract class DefaultRenderable<P extends DefaultPropertyBundle> impleme
             this.updateWorldLightmap();
         }
 
-        if (this.lightmap != null) {
-            this.lightmap.close();
-            this.lightmap = null;
+        if (WikiRenderer.alternateLightmap != null) {
+            WikiRenderer.alternateLightmap.close();
+            WikiRenderer.alternateLightmap = null;
         }
     }
 
