@@ -17,7 +17,6 @@ layout(location = 3) in ivec2 UV2;
 #endif
 
 #if !defined(IS_GUI) && !defined(IS_SEE_THROUGH)
-uniform sampler2D Sampler2;
 layout(location = 0) out float sphericalVertexDistance;
 layout(location = 1) out float cylindricalVertexDistance;
 #endif

@@ -6,6 +6,7 @@ import com.mojang.renderpearl.api.pipeline.ColorTargetState;
 import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.pigicial.wikirenderer.WikiRenderer;
+import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
@@ -29,20 +30,21 @@ public class CustomRenderPipelines {
             .withColorTargetState(ColorTargetState.DEFAULT)
             .build();
 
-    // based on RenderPipelines.TEXT
+    // based on RenderPipelines.TEXT, just without SAMPLER2
     public static final RenderPipeline ITEM_FRAME_MAP_FULL_BRIGHTNESS = RenderPipeline.builder(RenderPipelines.TEXT_SNIPPET)
             .withLocation("pipeline/wikirenderer_item_frame_custom_brightness")
             .withVertexShader(Identifier.fromNamespaceAndPath(WikiRenderer.MOD_ID, "item_frame_full_bright"))
             .withFragmentShader("core/text")
-            .withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR)
             .withPrimitiveTopology(PrimitiveTopology.QUADS)
             .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
+            .withBindGroupLayout(BindGroupLayouts.FOG)
+            .withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR)
             .build();
 
     private static final Function<Identifier, RenderType> ITEM_FRAME_RENDER_TYPE_CACHE = Util.memoize(
             identifier -> RenderType.create(
                     "wikirenderer_item_frame_brightness_override",
-                    RenderSetup.builder(ITEM_FRAME_MAP_FULL_BRIGHTNESS).withTexture("Sampler0", identifier).createRenderSetup()
+                    RenderSetup.builder(ITEM_FRAME_MAP_FULL_BRIGHTNESS).setOitPipelines(RenderPipelines.OIT_TEXT).withTexture("Sampler0", identifier).createRenderSetup()
             )
     );
 

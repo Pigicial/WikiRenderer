@@ -21,14 +21,6 @@ import java.util.function.Supplier;
 
 public class FullWidthCollapsibleContainer extends FlowLayout {
 
-    public static final Surface SURFACE = (context, component) -> context.fill(
-            component.x() + 5,
-            component.y(),
-            component.x() + 6,
-            component.y() + component.height(),
-            0x77FFFFFF
-    );
-
     protected final EventStream<OnToggled> toggledEvents = OnToggled.newStream();
 
     protected final List<UIComponent> collapsibleChildren = new ArrayList<>();
@@ -70,7 +62,6 @@ public class FullWidthCollapsibleContainer extends FlowLayout {
         // Content
         this.contentLayout = UIContainers.verticalFlow(Sizing.content(), Sizing.content());
         this.contentLayout.padding(Insets.left(15));
-        this.contentLayout.surface(SURFACE);
 
         super.child(this.contentLayout);
     }

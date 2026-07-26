@@ -7,7 +7,6 @@ import com.pigicial.wikirenderer.screen.owo.component.LabelComponent;
 import com.pigicial.wikirenderer.screen.owo.core.Color;
 import com.pigicial.wikirenderer.screen.owo.core.Insets;
 import com.pigicial.wikirenderer.screen.owo.core.Sizing;
-import com.pigicial.wikirenderer.screen.owo.core.Surface;
 import com.pigicial.wikirenderer.util.Translate;
 import net.minecraft.ChatFormatting;
 
@@ -29,7 +28,6 @@ public class EntityTypeSpecificPropertiesComponent extends DropdownComponent {
 
         this.closeWhenNotHovered(false);
         this.padding(Insets.of(7, 0, 0, 5));
-        this.surface(Surface.BLANK);
     }
 
     @Override
