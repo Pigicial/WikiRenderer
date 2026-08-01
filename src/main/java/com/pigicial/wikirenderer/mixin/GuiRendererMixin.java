@@ -11,7 +11,7 @@ import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
 import com.pigicial.wikirenderer.WikiRenderer;
 import com.pigicial.wikirenderer.mixin.screen.StagedVertexBufferDrawAccessor;
 import net.minecraft.client.gui.render.GuiRenderer;
-import net.minecraft.client.renderer.DynamicUniforms;
+import net.minecraft.client.renderer.DynamicGpuData;
 import net.minecraft.client.renderer.GameRenderer;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
@@ -30,8 +30,8 @@ public class GuiRendererMixin {
     }
 
     // If it works, it's not stupid.
-    @WrapOperation(method = "draw", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/DynamicUniforms;writeTransform(Lorg/joml/Matrix4f;)Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;"))
-    private GpuBufferSlice overrideDynamicTransforms(DynamicUniforms instance, Matrix4f modelView, Operation<GpuBufferSlice> original) {
+    @WrapOperation(method = "draw", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/DynamicGpuData;writeTransform(Lorg/joml/Matrix4f;)Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;"))
+    private GpuBufferSlice overrideDynamicTransforms(DynamicGpuData instance, Matrix4f modelView, Operation<GpuBufferSlice> original) {
         if (WikiRenderer.inRenderableDraw) {
             return original.call(instance, RenderSystem.getModelViewMatrixCopy());
         } else {

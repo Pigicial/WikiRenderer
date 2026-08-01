@@ -16,17 +16,31 @@ import net.minecraft.util.Util;
 import java.util.function.Function;
 
 public class CustomRenderPipelines {
-    public static final RenderPipeline CORE_TERRAIN_CUTOUT_NO_TRANSPARENCY = RenderPipeline.builder(RenderPipelines.TERRAIN_SNIPPET)
-            .withLocation("pipeline/wikirenderer_terrain_cutout_no_transparency")
+    // to fix leaves with transparent leaves turned off
+    public static final RenderPipeline CORE_SOLID_TERRAIN_NO_TRANSPARENCY = RenderPipeline.builder(RenderPipelines.TERRAIN_SNIPPET)
+            .withLocation("pipeline/wikirenderer_solid_terrain_no_transparency")
+            .withFragmentShader(Identifier.fromNamespaceAndPath(WikiRenderer.MOD_ID, "core_terrain_no_transparency"))
+            .withColorTargetState(ColorTargetState.DEFAULT)
+            .build();
+
+    public static final RenderPipeline CORE_CUTOUT_TERRAIN_NO_TRANSPARENCY = RenderPipeline.builder(RenderPipelines.TERRAIN_SNIPPET)
+            .withLocation("pipeline/wikirenderer_cutout_terrain_no_transparency")
             .withFragmentShader(Identifier.fromNamespaceAndPath(WikiRenderer.MOD_ID, "core_terrain_no_transparency"))
             .withShaderDefine("ALPHA_CUTOUT", 0.5f)
             .withColorTargetState(ColorTargetState.DEFAULT)
             .build();
 
     // to fix leaves with transparent leaves turned off
-    public static final RenderPipeline CORE_TERRAIN_SOLID_NO_TRANSPARENCY = RenderPipeline.builder(RenderPipelines.TERRAIN_SNIPPET)
-            .withLocation("pipeline/wikirenderer_terrain_solid_no_transparency")
+    public static final RenderPipeline CORE_SOLID_TERRAIN_MULTIDRAW_NO_TRANSPARENCY = RenderPipeline.builder(RenderPipelines.MULTIDRAW_TERRAIN_SNIPPET)
+            .withLocation("pipeline/wikirenderer_solid_terrain_multidraw_no_transparency")
             .withFragmentShader(Identifier.fromNamespaceAndPath(WikiRenderer.MOD_ID, "core_terrain_no_transparency"))
+            .withColorTargetState(ColorTargetState.DEFAULT)
+            .build();
+
+    public static final RenderPipeline CORE_CUTOUT_TERRAIN_MULTIDRAW_NO_TRANSPARENCY = RenderPipeline.builder(RenderPipelines.MULTIDRAW_TERRAIN_SNIPPET)
+            .withLocation("pipeline/wikirenderer_cutout_terrain_multidraw_no_transparency")
+            .withFragmentShader(Identifier.fromNamespaceAndPath(WikiRenderer.MOD_ID, "core_terrain_no_transparency"))
+            .withShaderDefine("ALPHA_CUTOUT", 0.5f)
             .withColorTargetState(ColorTargetState.DEFAULT)
             .build();
 
@@ -53,8 +67,8 @@ public class CustomRenderPipelines {
     }
 
     public static void register() {
-        RenderPipelines.register(CORE_TERRAIN_CUTOUT_NO_TRANSPARENCY);
-        RenderPipelines.register(CORE_TERRAIN_SOLID_NO_TRANSPARENCY);
+        RenderPipelines.register(CORE_CUTOUT_TERRAIN_NO_TRANSPARENCY);
+        RenderPipelines.register(CORE_SOLID_TERRAIN_NO_TRANSPARENCY);
         RenderPipelines.register(ITEM_FRAME_MAP_FULL_BRIGHTNESS);
     }
 }

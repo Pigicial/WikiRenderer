@@ -22,11 +22,14 @@ import com.pigicial.wikirenderer.render.area.side_view.WalkabilityFilter;
 import com.pigicial.wikirenderer.util.compatibility.EntityCullingCheck;
 import com.pigicial.wikirenderer.util.compatibility.ShaderCheck;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.client.TextureFilteringMethod;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.DynamicUniforms;
+import net.minecraft.client.renderer.DynamicGpuData;
 import net.minecraft.client.renderer.SectionBufferBuilderPack;
 import net.minecraft.client.renderer.SubmitNodeStorage;
 import net.minecraft.client.renderer.block.BlockModelLighter;
@@ -42,7 +45,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.BlockDestructionProgress;
 import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 
 import java.util.*;
@@ -140,15 +142,12 @@ public class WorldBlockMesh {
             }
         }
 
-        ChunkSectionsToRender sections = prepareBlockLayers(matrices.last().pose());
-
-        /*
-        private RenderTarget overrideFramebuffer(ChunkSectionLayerGroup instance, Operation<RenderTarget> original) {
-		if (WikiRenderer.mainTargetOverride != null) return WikiRenderer.mainTargetOverride;
-		return instance.outputTarget();
-	}
-         */
-
+        ChunkSectionsToRender sections;
+        if (Minecraft.getInstance().levelRenderer.isChunkRenderingUsesMultiDraw()) {
+            sections = this.prepareChunkRendersIndirect(matrices.last().pose(), !Minecraft.getInstance().gameRenderer.useImprovedTransparency());
+        } else {
+            sections = this.prepareChunkRenders(matrices.last().pose(), !Minecraft.getInstance().gameRenderer.useImprovedTransparency());
+        }
 
         RenderTarget mainTarget = WikiRenderer.mainTargetOverride == null ? Minecraft.getInstance().gameRenderer.mainRenderTarget() : WikiRenderer.mainTargetOverride;
 
@@ -165,7 +164,9 @@ public class WorldBlockMesh {
                         preTranslucencyTask.accept(renderPass, frame);
                     }
                     overrideTerrainTransparencyRenderPipelines = sectionLayer == ChunkSectionLayerGroup.OPAQUE;
-                    sections.renderGroup(sectionLayer, renderPass, terrainSampler, false);
+
+                    GpuTextureView blockAtlas = Minecraft.getInstance().getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS).getTextureView();
+                    sections.renderGroup(sectionLayer, renderPass, terrainSampler, blockAtlas, false);
                 }
             }
         }
@@ -179,56 +180,55 @@ public class WorldBlockMesh {
         }
     }
 
-    // Based on LevelRenderer#prepareChunkRenders
-    private ChunkSectionsToRender prepareBlockLayers(Matrix4fc posMatrix) {
-        EnumMap<ChunkSectionLayer, Int2ObjectOpenHashMap<List<RenderPass.Draw<GpuBufferSlice[]>>>> drawGroups = new EnumMap<>(ChunkSectionLayer.class);
+    @Environment(EnvType.CLIENT)
+    private record ChunkDrawGroup(
+            GpuBufferSlice vertexBuffer, @Nullable GpuBufferSlice indexBuffer,
+            @Nullable IndexType indexType, List<DynamicGpuData.IndexedDraw> draws) {
+    }
 
-        for (ChunkSectionLayer layer : ChunkSectionLayer.values()) {
-            drawGroups.put(layer, new Int2ObjectOpenHashMap<>());
-        }
+    private int extractSectionDrawGroups(
+            final boolean respectTranslucentOrder,
+            final List<DynamicGpuData.ChunkSectionInfo> sectionInfos,
+            final Map<ChunkSectionLayer, List<ChunkDrawGroup>> drawGroups
+    ) {
+        int largestIndexCount = 0;
+        Int2ObjectOpenHashMap<ChunkDrawGroup> drawGroupCache = new Int2ObjectOpenHashMap<>();
 
         List<MeshRenderSection> sortedSections = new ArrayList<>(subMeshes.values());
 
         if (orthographicTransparencySorting instanceof OrthographicSort orthoSort) {
-                sortedSections.sort(Comparator.comparingDouble(s -> {
-                    BlockPos from = s.getFrom();
-                    BlockPos to = s.getTo();
-                    float cx = (from.getX() + to.getX()) / 2f;
-                    float cy = (from.getY() + to.getY()) / 2f;
-                    float cz = (from.getZ() + to.getZ()) / 2f;
-                    return orthoSort.projectDepth(cx, cy, cz);
-                }));
+            sortedSections.sort(Comparator.comparingDouble(s -> {
+                BlockPos from = s.getFrom();
+                BlockPos to = s.getTo();
+                float cx = (from.getX() + to.getX()) / 2f;
+                float cy = (from.getY() + to.getY()) / 2f;
+                float cz = (from.getZ() + to.getZ()) / 2f;
+                return orthoSort.projectDepth(cx, cy, cz);
+            }));
         }
-
-        List<DynamicUniforms.ChunkSectionInfo> sectionInfos = new ArrayList<>();
-        GpuTextureView gpuTextureView = Minecraft.getInstance().getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS).getTextureView();
-        int width = gpuTextureView.getWidth(0);
-        int height = gpuTextureView.getHeight(0);
-        int largestIndexCount = 0;
 
         if (sectionRenderDispatcher != null) {
             sectionRenderDispatcher.lock();
+            int lastTransparentGroupHash = 0;
+
             try {
-                for (MeshRenderSection section : sortedSections) {
+                for (SectionRenderDispatcher.RenderSection section : sortedSections) {
                     SectionMesh sectionMesh = section.getSectionMesh();
-                    int uboIndex = -1;
+                    int sectionInfoDataIndex = -1;
 
                     for (ChunkSectionLayer layer : ChunkSectionLayer.values()) {
                         SectionMesh.SectionDraw draw = sectionMesh.getSectionDraw(layer);
                         SectionRenderDispatcher.RenderSectionBufferSlice slice = sectionRenderDispatcher.getRenderSectionSlice(sectionMesh, layer);
                         if (slice != null && draw != null && (!draw.hasCustomIndexBuffer() || slice.indexBuffer() != null)) {
-                            if (uboIndex == -1) {
-                                uboIndex = sectionInfos.size();
-                                sectionInfos.add(new DynamicUniforms.ChunkSectionInfo(new Matrix4f(posMatrix), 0, 0, 0, 1.0F, width, height));
+                            if (sectionInfoDataIndex == -1) {
+                                sectionInfoDataIndex = sectionInfos.size();
+                                sectionInfos.add(new DynamicGpuData.ChunkSectionInfo(0, 0, 0, 1.0f));
                             }
 
                             int combinedHash = 173;
-                            VertexFormat vertexFormat = layer.pipeline().getVertexFormatBinding(0);
+                            VertexFormat vertexFormat = layer.pipeline(false).getVertexFormatBinding(0);
                             GpuBuffer vertexBuffer = slice.vertexBuffer();
-                            if (layer != ChunkSectionLayer.TRANSLUCENT) {
-                                combinedHash = 31 * combinedHash + vertexBuffer.hashCode();
-                            }
-
+                            combinedHash = 31 * combinedHash + vertexBuffer.hashCode();
                             int firstIndex = 0;
                             GpuBuffer indexBuffer;
                             IndexType indexType;
@@ -242,29 +242,30 @@ public class WorldBlockMesh {
                             } else {
                                 indexBuffer = slice.indexBuffer();
                                 indexType = draw.indexType();
-                                if (layer != ChunkSectionLayer.TRANSLUCENT) {
-                                    combinedHash = 31 * combinedHash + indexBuffer.hashCode();
-                                    combinedHash = 31 * combinedHash + indexType.hashCode();
-                                }
-
+                                combinedHash = 31 * combinedHash + indexBuffer.hashCode();
+                                combinedHash = 31 * combinedHash + indexType.hashCode();
                                 firstIndex = (int) (slice.indexBufferOffset() / indexType.bytes);
                             }
 
-                            int sectionIndex = uboIndex;
                             int baseVertex = (int) (slice.vertexBufferOffset() / vertexFormat.getVertexSize());
-                            List<RenderPass.Draw<GpuBufferSlice[]>> draws = drawGroups.get(layer)
-                                    .computeIfAbsent(combinedHash, (_ -> new ArrayList<>()));
+                            ChunkDrawGroup drawGroup = null;
+                            if (layer.translucent() && respectTranslucentOrder) {
+                                if (combinedHash == lastTransparentGroupHash) {
+                                    drawGroup = drawGroups.get(layer).getLast();
+                                }
 
-                            draws.add(new RenderPass.Draw<>(
-                                    0,
-                                    vertexBuffer,
-                                    indexBuffer,
-                                    indexType,
-                                    firstIndex,
-                                    draw.indexCount(),
-                                    baseVertex,
-                                    (transforms, uniformUploader) -> uniformUploader.upload("ChunkSection", transforms[sectionIndex])
-                            ));
+                                lastTransparentGroupHash = combinedHash;
+                            } else {
+                                drawGroup = drawGroupCache.getOrDefault(combinedHash, null);
+                            }
+
+                            if (drawGroup == null) {
+                                drawGroup = new ChunkDrawGroup(vertexBuffer.slice(), indexBuffer != null ? indexBuffer.slice() : null, indexType, new ArrayList<>());
+                                drawGroupCache.put(combinedHash, drawGroup);
+                                drawGroups.get(layer).add(drawGroup);
+                            }
+
+                            drawGroup.draws.add(new DynamicGpuData.IndexedDraw(draw.indexCount(), 1, firstIndex, baseVertex, sectionInfoDataIndex));
                         }
                     }
                 }
@@ -273,9 +274,124 @@ public class WorldBlockMesh {
             }
         }
 
-        GpuBufferSlice[] gpuBufferSlices = RenderSystem.getDynamicUniforms()
-                .writeChunkSections(sectionInfos.toArray(new DynamicUniforms.ChunkSectionInfo[0]));
-        return new ChunkSectionsToRender(gpuTextureView, drawGroups, largestIndexCount, gpuBufferSlices);
+        return largestIndexCount;
+    }
+
+    public ChunkSectionsToRender prepareChunkRenders(final Matrix4fc modelViewMatrix, final boolean respectTranslucentOrder) {
+        Map<ChunkSectionLayer, List<ChunkDrawGroup>> drawGroups = Util.makeEnumMap(ChunkSectionLayer.class, _ -> new ReferenceArrayList<>());
+        List<DynamicGpuData.ChunkSectionInfo> sectionInfos = new ArrayList<>();
+
+        GpuTextureView blockAtlas = Minecraft.getInstance().getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS).getTextureView();
+        int textureAtlasWidth = blockAtlas.getWidth(0);
+        int textureAtlasHeight = blockAtlas.getHeight(0);
+
+        int largestIndexCount = this.extractSectionDrawGroups(respectTranslucentOrder, sectionInfos, drawGroups);
+        Map<ChunkSectionLayer, List<RenderPass.Draw<GpuBufferSlice[]>>> flattenDraws = Util.makeEnumMap(ChunkSectionLayer.class, _ -> new ReferenceArrayList<>());
+
+        for (ChunkSectionLayer layer : ChunkSectionLayer.values()) {
+            List<ChunkDrawGroup> sortedDrawGroups = drawGroups.get(layer);
+            if (layer.translucent() && respectTranslucentOrder) {
+                sortedDrawGroups = sortedDrawGroups.reversed();
+            }
+
+            for (ChunkDrawGroup drawGroup : sortedDrawGroups) {
+                List<RenderPass.Draw<GpuBufferSlice[]>> dest = flattenDraws.get(layer);
+                List<DynamicGpuData.IndexedDraw> sortedDraws = drawGroup.draws;
+                if (layer.translucent() && respectTranslucentOrder) {
+                    sortedDraws = sortedDraws.reversed();
+                }
+
+                for (DynamicGpuData.IndexedDraw draw : sortedDraws) {
+                    int sectionInfoDataIndex = draw.baseInstance();
+                    GpuBuffer indexBuffer = drawGroup.indexBuffer == null ? null : drawGroup.indexBuffer().buffer();
+                    dest.add(
+                            new RenderPass.Draw<>(
+                                    0,
+                                    drawGroup.vertexBuffer.buffer(),
+                                    indexBuffer,
+                                    drawGroup.indexType,
+                                    draw.firstIndex(),
+                                    draw.indexCount(),
+                                    draw.baseVertex(),
+                                    (sectionUbos, uploader) -> uploader.setUniform("ChunkSection", sectionUbos[sectionInfoDataIndex])
+                            )
+                    );
+                }
+            }
+        }
+
+        GpuBufferSlice terrainTransformUbo = RenderSystem.getDynamicUniforms().writeTerrainTransform(modelViewMatrix, textureAtlasWidth, textureAtlasHeight);
+        GpuBufferSlice[] chunkSectionInfos = RenderSystem.getDynamicUniforms().writeChunkSections(sectionInfos.toArray(new DynamicGpuData.ChunkSectionInfo[0]));
+        RenderSystem.AutoStorageIndexBuffer autoIndices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
+        if (largestIndexCount != 0) {
+            autoIndices.requestIndexCount(largestIndexCount);
+        }
+
+        return new ChunkSectionsToRender.DrawSeparate(terrainTransformUbo, flattenDraws, largestIndexCount, chunkSectionInfos);
+    }
+
+    public ChunkSectionsToRender prepareChunkRendersIndirect(final Matrix4fc modelViewMatrix, final boolean respectTranslucentOrder) {
+        EnumMap<ChunkSectionLayer, List<ChunkDrawGroup>> drawGroups = new EnumMap<>(ChunkSectionLayer.class);
+
+        for (ChunkSectionLayer layer : ChunkSectionLayer.values()) {
+            drawGroups.put(layer, new ReferenceArrayList<>());
+        }
+
+        List<DynamicGpuData.ChunkSectionInfo> sectionInfos = new ArrayList<>();
+        GpuTextureView blockAtlas = Minecraft.getInstance().getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS).getTextureView();
+        int textureAtlasWidth = blockAtlas.getWidth(0);
+        int textureAtlasHeight = blockAtlas.getHeight(0);
+        int largestIndexCount = this.extractSectionDrawGroups(respectTranslucentOrder, sectionInfos, drawGroups);
+        EnumMap<ChunkSectionLayer, List<ChunkSectionsToRender.GpuMultiDrawIndexedIndirect>> indirectDraws = new EnumMap<>(ChunkSectionLayer.class);
+
+        for (ChunkSectionLayer layer : ChunkSectionLayer.values()) {
+            indirectDraws.put(layer, new ArrayList<>());
+        }
+
+        List<List<DynamicGpuData.IndexedDraw>> batchedDraws = new ArrayList<>();
+
+        for (ChunkSectionLayer layer : ChunkSectionLayer.values()) {
+            List<ChunkDrawGroup> sortedDrawGroups = drawGroups.get(layer);
+            if (layer.translucent() && respectTranslucentOrder) {
+                sortedDrawGroups = sortedDrawGroups.reversed();
+            }
+
+            for (ChunkDrawGroup chunkDrawGroup : sortedDrawGroups) {
+                List<DynamicGpuData.IndexedDraw> sortedDraws = chunkDrawGroup.draws;
+                if (layer.translucent() && respectTranslucentOrder) {
+                    sortedDraws = sortedDraws.reversed();
+                }
+
+                batchedDraws.add(sortedDraws);
+            }
+        }
+
+        GpuBufferSlice[] indirectBufferSlices = RenderSystem.getDynamicUniforms().writeChunkSectionCommands(batchedDraws);
+        int index = 0;
+
+        for (ChunkSectionLayer layer : ChunkSectionLayer.values()) {
+            List<ChunkDrawGroup> sortedDrawGroups = drawGroups.get(layer);
+            if (layer.translucent() && respectTranslucentOrder) {
+                sortedDrawGroups = sortedDrawGroups.reversed();
+            }
+
+            for (ChunkDrawGroup chunkDrawGroup : sortedDrawGroups) {
+                List<DynamicGpuData.IndexedDraw> draws = chunkDrawGroup.draws;
+                GpuBufferSlice indirectBuffer = indirectBufferSlices[index++];
+                indirectDraws.get(layer).add(new ChunkSectionsToRender.GpuMultiDrawIndexedIndirect(
+                        chunkDrawGroup.vertexBuffer, chunkDrawGroup.indexBuffer, chunkDrawGroup.indexType, indirectBuffer, draws.size()
+                ));
+            }
+        }
+
+        GpuBufferSlice terrainTransformUbo = RenderSystem.getDynamicUniforms().writeTerrainTransform(modelViewMatrix, textureAtlasWidth, textureAtlasHeight);
+        GpuBufferSlice chunkSectionInfos = RenderSystem.getDynamicUniforms().writeChunkSectionsInstanced(sectionInfos);
+        RenderSystem.AutoStorageIndexBuffer autoIndices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
+        if (largestIndexCount != 0) {
+            autoIndices.requestIndexCount(largestIndexCount);
+        }
+
+        return new ChunkSectionsToRender.DrawIndirect(terrainTransformUbo, indirectDraws, largestIndexCount, chunkSectionInfos);
     }
 
     public void drawBlockEntities(PoseStack standardStack, SubmitNodeStorage nodeStorage, CameraRenderState cameraRenderState, float tickDelta,

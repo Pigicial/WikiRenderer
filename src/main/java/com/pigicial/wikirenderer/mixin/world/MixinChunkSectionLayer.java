@@ -13,16 +13,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinChunkSectionLayer {
 
     @Inject(method = "pipeline", at = @At("HEAD"), cancellable = true)
-    private void onGetPipeline(CallbackInfoReturnable<RenderPipeline> cir) {
+    private void onGetPipeline(boolean multiDraw, CallbackInfoReturnable<RenderPipeline> cir) {
         ChunkSectionLayer layer = (ChunkSectionLayer) (Object) this;
 
         if (WorldBlockMesh.overrideTerrainTransparencyRenderPipelines) {
             if (layer == ChunkSectionLayer.CUTOUT) {
-                cir.setReturnValue(CustomRenderPipelines.CORE_TERRAIN_CUTOUT_NO_TRANSPARENCY);
+                cir.setReturnValue(multiDraw ? CustomRenderPipelines.CORE_CUTOUT_TERRAIN_MULTIDRAW_NO_TRANSPARENCY : CustomRenderPipelines.CORE_CUTOUT_TERRAIN_NO_TRANSPARENCY);
             } else if (layer == ChunkSectionLayer.SOLID) {
                 // used to fix leaves that have transparency turned off
                 // in that case, despite being cutout-based-blocks, they can have transparent pixels
-                cir.setReturnValue(CustomRenderPipelines.CORE_TERRAIN_SOLID_NO_TRANSPARENCY);
+                cir.setReturnValue(multiDraw ? CustomRenderPipelines.CORE_SOLID_TERRAIN_MULTIDRAW_NO_TRANSPARENCY : CustomRenderPipelines.CORE_SOLID_TERRAIN_NO_TRANSPARENCY);
             }
         }
     }

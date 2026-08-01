@@ -71,7 +71,7 @@ public record MinimapCalibratorData(
         int ySize = (int) boundingBox.getYsize();
         int zSize = (int) boundingBox.getZsize();
 
-        Matrix4f projection = new Matrix4f().setOrtho(-1, 1, -1, 1, -100, 100);
+        Matrix4f projection = new Matrix4f().setOrtho(-1, 1, -1, 1, -100, 1000);
 
         Matrix4fStack modelView = new Matrix4fStack(2);
         renderable.getProperties().applyToViewMatrix(renderable, modelView);

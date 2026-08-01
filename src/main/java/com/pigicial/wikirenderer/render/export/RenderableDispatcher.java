@@ -57,7 +57,7 @@ public class RenderableDispatcher {
         renderable.getProperties().applyToViewMatrix(renderable, modelViewStack);
 
         boolean zZeroToOne = RenderSystem.getDevice().getDeviceInfo().isZZeroToOne();
-        Matrix4f projectionMatrix = ORTHOGRAPHIC_MATRIX.setOrtho(-aspectRatio, aspectRatio, 1, -1, -1000, 10, zZeroToOne);
+        Matrix4f projectionMatrix = ORTHOGRAPHIC_MATRIX.setOrtho(-aspectRatio, aspectRatio, 1, -1, -1000, 1000, zZeroToOne);
         WikiRenderer.beginRenderableDraw(PROJECTION_MATRIX_BUFFER, projectionMatrix, drawType);
         WikiRenderer.setSortingMethod(projectionMatrix, modelViewStack);
 
