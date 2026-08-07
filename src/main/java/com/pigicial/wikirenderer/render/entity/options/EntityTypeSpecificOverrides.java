@@ -105,8 +105,10 @@ public class EntityTypeSpecificOverrides<S extends EntityRenderState> {
                     Minecraft.getInstance().getItemModelResolver().updateForLiving(state.leftHandItemState, value, ItemDisplayContext.THIRD_PERSON_LEFT_HAND, Minecraft.getInstance().player);
                 }
             });
-            overrides.registerEnumOverrideInCategory("hands", "swingAnimationType", SwingAnimationType.class, s -> s.swingAnimationType, (s, value) -> s.swingAnimationType = value);
-            overrides.registerFloatOverrideInCategory("hands", "attackTime", s -> s.attackTime, (s, value) -> s.attackTime = value);
+
+            // todo: re-enable this
+            // overrides.registerEnumOverrideInCategory("hands", "swingAnimationType", SwingAnimationType.class, s -> s.swingAnimationType, (s, value) -> s.swingAnimationType = value);
+            // overrides.registerFloatOverrideInCategory("hands", "attackTime", s -> s.attackTime, (s, value) -> s.attackTime = value);
         });
 
         registerOverrides(ArmorStandRenderState.class, overrides -> {
@@ -483,7 +485,9 @@ public class EntityTypeSpecificOverrides<S extends EntityRenderState> {
                 overrides.registerFloatOverrideInCategory("walking", "walkSpeed", s -> s.speedValue, (s, value) -> s.speedValue = value, 1f);
                 //overrides.registerFloatOverride("maxCrossbowChargeDuration", s -> s.maxCrossbowChargeDuration, (s, value) -> s.maxCrossbowChargeDuration = value);
                 overrides.registerFloatOverrideInCategory("hands", "ticksUsingItem", s -> s.ticksUsingItem, (s, value) -> s.ticksUsingItem = value);
-                overrides.registerEnumOverrideInCategory("hands", "attackArm", HumanoidArm.class, s -> s.attackArm, (s, value) -> s.attackArm = value);
+
+                // todo: re-enable this
+                //overrides.registerEnumOverrideInCategory("hands", "attackArm", HumanoidArm.class, s -> s.attackArm, (s, value) -> s.attackArm = value);
             }
 
             overrides.registerBooleanOverride("isCrouching", s -> s.isCrouching, (s, value) -> s.isCrouching = value);
@@ -529,7 +533,9 @@ public class EntityTypeSpecificOverrides<S extends EntityRenderState> {
             overrides.registerEnumOverrideInCategory("hands", "armPose", AbstractIllager.IllagerArmPose.class, s -> s.armPose, (s, value) -> s.armPose = value);
             //overrides.registerIntOverride("maxCrossbowChargeDuration", s -> s.maxCrossbowChargeDuration, (s, value) -> s.maxCrossbowChargeDuration = value);
             overrides.registerFloatOverrideInCategory("hands", "ticksUsingItem", s -> s.ticksUsingItem, (s, value) -> s.ticksUsingItem = value);
-            overrides.registerFloatOverride("attackAnim", s -> s.attackAnim, (s, value) -> s.attackAnim = value);
+
+            // todo: re-enable this
+            // overrides.registerFloatOverride("attackAnim", s -> s.attackAnim, (s, value) -> s.attackAnim = value);
         });
 
         // illusioner (vec3[])
