@@ -54,6 +54,7 @@ public class WikiRenderer implements ClientModInitializer {
     public static boolean inEntityDraw = false;
     public static boolean inSpriteEntityDraw = false;
     public static boolean inContainerScreenDraw = false;
+    public static boolean inGuiItemAtlasDraw = false;
     public static boolean inRenderableDraw = false;
     public static boolean inRenderableTick = false;
     public static boolean inBatchRender = false;
