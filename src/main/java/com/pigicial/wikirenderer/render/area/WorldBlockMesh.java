@@ -274,6 +274,10 @@ public class WorldBlockMesh {
                 }
 
                 BlockEntityRenderState state = blockEntityDispatcher.tryExtractRenderState(entity, tickDelta, breakProgress, true);
+                if (state == null) {
+                    state = blockEntityDispatcher.tryExtractRenderState(entity, tickDelta, breakProgress, false);
+                }
+
                 if (state instanceof BeaconRenderState && AreaPropertyBundle.INSTANCE.hideBeaconBeams.get()) {
                     return;
                 }
