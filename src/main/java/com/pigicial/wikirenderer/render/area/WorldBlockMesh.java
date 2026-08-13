@@ -143,7 +143,7 @@ public class WorldBlockMesh {
         }
 
         ChunkSectionsToRender sections;
-        if (Minecraft.getInstance().levelRenderer.isChunkRenderingUsesMultiDraw()) {
+        if (Minecraft.getInstance().levelRenderer.isChunkRenderingUsingMultiDrawIndirect()) {
             sections = this.prepareChunkRendersIndirect(matrices.last().pose(), !Minecraft.getInstance().gameRenderer.useImprovedTransparency());
         } else {
             sections = this.prepareChunkRenders(matrices.last().pose(), !Minecraft.getInstance().gameRenderer.useImprovedTransparency());

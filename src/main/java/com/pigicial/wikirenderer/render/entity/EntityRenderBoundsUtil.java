@@ -138,7 +138,7 @@ public class EntityRenderBoundsUtil {
             }
 
             return tempStorage.getSubmitsPerOrder().values().stream().anyMatch(collection ->
-                    !collection.nameTags.isEmpty() || !collection.seeThroughNameTags.isEmpty()
+                    !collection.nameTags.isEmpty() || !collection.seeThrough.isEmpty()
             );
         } finally {
             WikiRenderer.inBoundsCalculation = false;
