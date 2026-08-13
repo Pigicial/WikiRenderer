@@ -1,7 +1,9 @@
 package com.pigicial.wikirenderer;
 
+import com.mojang.brigadier.context.CommandContext;
 import com.pigicial.wikirenderer.command.subcommands.RenderBlockSubCommand;
 import com.pigicial.wikirenderer.command.subcommands.RenderEntitySubCommand;
+import com.pigicial.wikirenderer.util.compatibility.REISearchFocus;
 import com.pigicial.wikirenderer.mixin.access.AbstractContainerScreenAccessor;
 import com.pigicial.wikirenderer.mixin.access.CreativeModeInventoryScreenAccessor;
 import com.pigicial.wikirenderer.property.GlobalProperties;
@@ -20,8 +22,10 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.KeyMapping.Category;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -30,23 +34,24 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.CreativeModeTab.Type;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 
 public class WikiRendererKeybinds {
 
-    private static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(WikiRenderer.MOD_ID, "keybinds"));
-    public static final KeyMapping KEYBIND_SELECT_AREA = new KeyMapping("key.wikirenderer.area_select", GLFW.GLFW_KEY_C, CATEGORY);
-    public static final KeyMapping KEYBIND_SELECT_AREA_EXPAND = new KeyMapping("key.wikirenderer.area_select_expand", GLFW.GLFW_KEY_V, CATEGORY);
-    public static final KeyMapping KEYBIND_RENDER_HOVERED_ITEM_OR_VIEWED_ENTITY = new KeyMapping("key.wikirenderer.render_hovered_item_or_viewed_entity", GLFW.GLFW_KEY_H, CATEGORY);
-    public static final KeyMapping KEYBIND_RENDER_HOVERED_ITEM_TOOLTIP = new KeyMapping("key.wikirenderer.render_hovered_item_tooltip", GLFW.GLFW_KEY_J, CATEGORY);
-    public static final KeyMapping KEYBIND_RENDER_TARGETED_BLOCK = new KeyMapping("key.wikirenderer.render_targeted_block", GLFW.GLFW_KEY_L, CATEGORY);
-    public static final KeyMapping KEYBIND_RENDER_INVENTORY = new KeyMapping("key.wikirenderer.render_inventory", GLFW.GLFW_KEY_SEMICOLON, CATEGORY);
-    public static final KeyMapping KEYBIND_BATCH_RENDER_INVENTORY_ITEMS = new KeyMapping("key.wikirenderer.batch_render_inventory", GLFW.GLFW_KEY_K, CATEGORY);
+    private static final KeyMapping.Category CATEGORY = Category.register(Identifier.fromNamespaceAndPath("wikirenderer", "keybinds"));
+    public static final KeyMapping KEYBIND_SELECT_AREA = new KeyMapping("key.wikirenderer.area_select", 67, CATEGORY);
+    public static final KeyMapping KEYBIND_SELECT_AREA_EXPAND = new KeyMapping("key.wikirenderer.area_select_expand", 86, CATEGORY);
+    public static final KeyMapping KEYBIND_RENDER_HOVERED_ITEM_OR_VIEWED_ENTITY = new KeyMapping("key.wikirenderer.render_hovered_item_or_viewed_entity", 72, CATEGORY);
+    public static final KeyMapping KEYBIND_RENDER_HOVERED_ITEM_TOOLTIP = new KeyMapping("key.wikirenderer.render_hovered_item_tooltip", 74, CATEGORY);
+    public static final KeyMapping KEYBIND_RENDER_TARGETED_BLOCK = new KeyMapping("key.wikirenderer.render_targeted_block", 76, CATEGORY);
+    public static final KeyMapping KEYBIND_RENDER_INVENTORY = new KeyMapping("key.wikirenderer.render_inventory", 59, CATEGORY);
+    public static final KeyMapping KEYBIND_BATCH_RENDER_INVENTORY_ITEMS = new KeyMapping("key.wikirenderer.batch_render_inventory", 75, CATEGORY);
+
+    private static final boolean REI_LOADED = FabricLoader.getInstance().isModLoaded("roughlyenoughitems");
 
     public static void registerKeyBinds() {
         KeyMappingHelper.registerKeyMapping(KEYBIND_SELECT_AREA);
@@ -66,35 +71,30 @@ public class WikiRendererKeybinds {
                 } else {
                     AreaSelectionHelper.select();
                 }
-                return;
-            }
-            if (KEYBIND_SELECT_AREA_EXPAND.consumeClick()) {
+            } else if (KEYBIND_SELECT_AREA_EXPAND.consumeClick()) {
                 if (client.player.isShiftKeyDown()) {
                     AreaSelectionHelper.clear();
                 } else {
                     AreaSelectionHelper.expand();
                 }
-                return;
-            }
-
-            if (KEYBIND_RENDER_HOVERED_ITEM_OR_VIEWED_ENTITY.consumeClick()) {
-                RenderEntitySubCommand.renderTargetedEntity(null);
-            }
-
-            if (KEYBIND_RENDER_TARGETED_BLOCK.consumeClick()) {
-                RenderBlockSubCommand.renderTargetedBlock(null);
+            } else {
+                if (KEYBIND_RENDER_HOVERED_ITEM_OR_VIEWED_ENTITY.consumeClick()) {
+                    RenderEntitySubCommand.renderTargetedEntity((CommandContext) null);
+                }
+                if (KEYBIND_RENDER_TARGETED_BLOCK.consumeClick()) {
+                    RenderBlockSubCommand.renderTargetedBlock((CommandContext) null);
+                }
             }
         });
 
-        ScreenEvents.AFTER_INIT.register((client, screen, _, _) -> ScreenKeyboardEvents.afterKeyPress(screen).register((_, key) -> {
-            if (Minecraft.getInstance().options.keyDebugModifier.isDown()) {
-                return;
-            }
+        ScreenEvents.AFTER_INIT.register((client, screen, width, height) -> ScreenKeyboardEvents.afterKeyPress(screen).register((s, key) -> {
+            if (Minecraft.getInstance().options.keyDebugModifier.isDown()) return;
+            if (isTypingInAnyTextField(s)) return;
 
             if (KEYBIND_RENDER_HOVERED_ITEM_OR_VIEWED_ENTITY.matches(key)) {
                 ItemStack hoveredSlot = getHoveredSlot(client);
                 if (hoveredSlot != null) {
-                    if (GlobalProperties.get().sbFrameRenderingKeybindOverrides.get()) {
+                    if ((Boolean) GlobalProperties.get().sbFrameRenderingKeybindOverrides.get()) {
                         TextureData textureData = PlayerTextureUtils.getTextureDataFromPlayerHead(hoveredSlot);
                         if (textureData == null) {
                             Translate.sendMessage("sb_player_head_mark_first_fail");
@@ -102,7 +102,6 @@ public class WikiRendererKeybinds {
                             Translate.sendMessage("sb_player_head_mark_first_success");
                             SkyBlockTimingDataCacher.getInstance().markTextureAsFirst(textureData);
                         }
-
                         return;
                     }
                     ScreenSchedulerAndSaver.openImmediately(new RenderScreen(new ItemRenderable(hoveredSlot)));
@@ -132,31 +131,31 @@ public class WikiRendererKeybinds {
         }));
     }
 
+    private static boolean isTypingInAnyTextField(Screen screen) {
+        if (screen.getFocused() instanceof EditBox) return true;
+        if (REI_LOADED && REISearchFocus.isSearchFieldFocused()) return true;
+        return false;
+    }
+
     @Nullable
     protected static ItemStack getHoveredSlot(Minecraft client) {
         Player player = client.player;
-        if (player == null) {
-            return null;
-        }
+        if (player == null) return null;
 
         Screen currentScreen = client.screen;
         if (currentScreen instanceof AbstractContainerScreen<?> containerScreen) {
             if (currentScreen.getFocused() instanceof EditBox) return null;
             if (currentScreen instanceof CreativeModeInventoryScreen
                 && CreativeModeInventoryScreenAccessor.getSelectedTab() != null
-                && CreativeModeInventoryScreenAccessor.getSelectedTab().getType() == CreativeModeTab.Type.SEARCH) {
+                && CreativeModeInventoryScreenAccessor.getSelectedTab().getType() == Type.SEARCH) {
                 return null;
             }
 
             Slot hoveredSlot = ((AbstractContainerScreenAccessor) containerScreen).getHoveredSlot();
-            if (hoveredSlot == null) {
-                return null;
-            }
+            if (hoveredSlot == null) return null;
 
             ItemStack hoveredItem = hoveredSlot.getItem();
-            if (!hoveredItem.isEmpty()) {
-                return hoveredItem;
-            }
+            if (!hoveredItem.isEmpty()) return hoveredItem;
         }
 
         return null;
@@ -165,16 +164,14 @@ public class WikiRendererKeybinds {
     @Nullable
     protected static List<ItemStack> getItems(Minecraft client) {
         Player player = client.player;
-        if (player == null) {
-            return null;
-        }
+        if (player == null) return null;
 
         Screen currentScreen = client.screen;
         if (currentScreen instanceof AbstractContainerScreen<?> containerScreen) {
             if (currentScreen.getFocused() instanceof EditBox) return null;
             if (currentScreen instanceof CreativeModeInventoryScreen
                 && CreativeModeInventoryScreenAccessor.getSelectedTab() != null
-                && CreativeModeInventoryScreenAccessor.getSelectedTab().getType() == CreativeModeTab.Type.SEARCH) {
+                && CreativeModeInventoryScreenAccessor.getSelectedTab().getType() == Type.SEARCH) {
                 return null;
             }
 

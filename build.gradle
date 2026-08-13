@@ -31,6 +31,7 @@ repositories {
             includeGroup("maven.modrinth")
         }
     }
+    maven { url "https://maven.shedaniel.me/"}
     mavenLocal()
 
     maven { url = "https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1" }
@@ -77,6 +78,9 @@ dependencies {
     compileOnly "maven.modrinth:entityculling:${project.entity_culling_version}"
     compileOnly "fi.dy.masa.litematica:litematica-fabric-${project.litematica_version}"
     compileOnly "fi.dy.masa.malilib:malilib-fabric-${project.malilib_version}"
+    compileOnly("me.shedaniel:RoughlyEnoughItems-api-fabric:${project.rei_version}") {
+        exclude "group": "net.fabricmc.fabric-api"
+    }
 }
 
 def gifskiVersion = project.gifski_version
