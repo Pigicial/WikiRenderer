@@ -6,7 +6,6 @@ import com.pigicial.wikirenderer.render.export.animation.AnimationHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.rendertype.TextureTransform;
 import net.minecraft.client.renderer.state.GameRenderState;
-import net.minecraft.util.Util;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -61,11 +60,9 @@ public class TextureTransformMixin {
         }
     }
 
-    @Redirect(
-            method = "setupGlintTexturing",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Util;getMillis()J")
-    )
-    private static long changeGlintTiming() {
+    // this used to just replace Util.getMillis() but that broke with replay mod so this'll have to do
+    @ModifyVariable(method = "setupGlintTexturing", at = @At("STORE"), name = "millis")
+    private static long changeGlintTiming(long millis) {
         GlobalProperties globalProperties = GlobalProperties.get();
         if (WikiRenderer.inRenderableDraw && globalProperties.syncEnchantmentGlintsToExport.get()) {
             AnimationHandler animationHandler = WikiRenderer.currentAnimationHandler;
@@ -75,11 +72,15 @@ public class TextureTransformMixin {
 
                 int frameRate = globalProperties.exportFramerate.get();
                 double secondsIntoAnimation = (double) framesRenderedSoFar / (double) frameRate;
-                return (long) (secondsIntoAnimation * 1000);
+                double rawMillis = secondsIntoAnimation * 1000.0;
+
+                double glintSpeed = Minecraft.getInstance().gameRenderer.getGameRenderState().optionsRenderState.glintSpeed;
+                return (long) (rawMillis * glintSpeed * 8.0);
             } else {
-                return 0;
+                return 0L;
             }
         }
-        return Util.getMillis();
+        return millis;
     }
+
 }
