@@ -7,19 +7,33 @@ import io.wispforest.owo.ui.component.UIComponents;
 import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.container.UIContainers;
 import io.wispforest.owo.ui.core.*;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.List;
 
-public class SelectRenderTaskScreen extends BaseOwoScreen<FlowLayout> {
+public class SelectRenderTaskScreen extends BaseOwoScreen<FlowLayout> implements ContainerPreservingScreen {
 
     private final Collection<ItemStack> items;
+    @Nullable
+    private AbstractContainerScreen<?> previouslyOpenedContainerScreen = null;
 
     public SelectRenderTaskScreen(Collection<ItemStack> items) {
         this.items = items;
+    }
+
+    @Override
+    public void setPreviouslyOpenedContainerScreen(@Nullable AbstractContainerScreen<?> screen) {
+        this.previouslyOpenedContainerScreen = screen;
+    }
+
+    @Override
+    public @Nullable AbstractContainerScreen<?> getPreviouslyOpenedContainerScreen() {
+        return this.previouslyOpenedContainerScreen;
     }
 
     @Override
@@ -96,6 +110,13 @@ public class SelectRenderTaskScreen extends BaseOwoScreen<FlowLayout> {
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    @Override
+    public void onClose() {
+        if (!ScreenSchedulerAndSaver.hasScheduled() && ScreenSchedulerAndSaver.restorePreviouslyOpenedContainer(this)) return;
+
+        super.onClose();
     }
 
 }

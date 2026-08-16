@@ -1,5 +1,7 @@
 package com.pigicial.wikirenderer.mixin;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.pigicial.wikirenderer.WikiRenderer;
 import com.pigicial.wikirenderer.screen.RenderScreen;
@@ -27,6 +29,13 @@ public class MinecraftMixin {
 
         ScreenSchedulerAndSaver.openScheduledScreen();
         ci.cancel();
+    }
+
+    @WrapOperation(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;removed()V"))
+    private void skipPreservedContainerRemoved(Screen screen, Operation<Void> original) {
+        if (ScreenSchedulerAndSaver.shouldSkipRemoved(screen)) return;
+
+        original.call(screen);
     }
 
     @Inject(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/DeltaTracker$Timer;advanceGameTime(J)I"))
