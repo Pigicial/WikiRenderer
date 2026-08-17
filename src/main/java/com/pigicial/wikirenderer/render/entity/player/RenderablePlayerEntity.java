@@ -10,6 +10,7 @@ import net.minecraft.client.multiplayer.CommonListenerCookie;
 import net.minecraft.client.multiplayer.LevelLoadTracker;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.multiplayer.chat.ChatAbilities;
+import net.minecraft.client.player.ItemActivation;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.client.telemetry.TelemetryEventSender;
@@ -53,7 +54,8 @@ public class RenderablePlayerEntity extends LocalPlayer {
                 new ClientRecipeBook(),
                 Input.EMPTY,
                 false,
-                new ChatAbilities.Builder().build()
+                new ChatAbilities.Builder().build(),
+                new ItemActivation()
         );
 
         this.setId(Integer.MAX_VALUE);
