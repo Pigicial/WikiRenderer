@@ -1,5 +1,6 @@
 package com.pigicial.wikirenderer.screen;
 
+import com.pigicial.wikirenderer.render.batch.BatchPropertyBundle;
 import com.pigicial.wikirenderer.render.batch.ItemBatchRenderTask;
 import com.pigicial.wikirenderer.util.Translate;
 import io.wispforest.owo.ui.base.BaseOwoScreen;
@@ -7,8 +8,10 @@ import io.wispforest.owo.ui.component.UIComponents;
 import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.container.UIContainers;
 import io.wispforest.owo.ui.core.*;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -17,9 +20,13 @@ import java.util.List;
 public class SelectRenderTaskScreen extends BaseOwoScreen<FlowLayout> {
 
     private final Collection<ItemStack> items;
+    private final Collection<ItemStack> playerHeadItems;
+    private boolean lastHeadItemsState;
 
     public SelectRenderTaskScreen(Collection<ItemStack> items) {
         this.items = items;
+        this.playerHeadItems = items.stream().filter(item -> item.is(Items.PLAYER_HEAD)).toList();
+        this.lastHeadItemsState = this.isUsingOnlyHeadItems();
     }
 
     @Override
@@ -44,19 +51,19 @@ public class SelectRenderTaskScreen extends BaseOwoScreen<FlowLayout> {
 
         contentPanel.child(UIContainers.verticalFlow(Sizing.content(), Sizing.content())
                 .child(UIComponents.button(Translate.gui("select_item_batch"), _ -> {
-                    ItemBatchRenderTask.BATCH_ITEM.action.accept("inventory", this.items);
+                    ItemBatchRenderTask.BATCH_ITEM.action.accept("inventory", this.getUsedItems());
                     this.onClose();
                 }).horizontalSizing(Sizing.fixed(80)).margins(Insets.bottom(5)))
                 .child(UIComponents.button(Translate.gui("select_block_batch"), _ -> {
-                    ItemBatchRenderTask.BATCH_BLOCK.action.accept("inventory", this.items);
+                    ItemBatchRenderTask.BATCH_BLOCK.action.accept("inventory", this.getUsedItems());
                     this.onClose();
                 }).horizontalSizing(Sizing.fixed(80)).margins(Insets.bottom(5)))
                 .child(UIComponents.button(Translate.gui("select_tooltip_batch"), _ -> {
-                    ItemBatchRenderTask.BATCH_TOOLTIP.action.accept("inventory", this.items);
+                    ItemBatchRenderTask.BATCH_TOOLTIP.action.accept("inventory", this.getUsedItems());
                     this.onClose();
                 }).horizontalSizing(Sizing.fixed(80)).margins(Insets.bottom(5)))
                 .child(UIComponents.button(Translate.gui("select_atlas"), _ -> {
-                    ItemBatchRenderTask.ITEM_ATLAS.action.accept("inventory", this.items);
+                    ItemBatchRenderTask.ITEM_ATLAS.action.accept("inventory", this.getUsedItems());
                     this.onClose();
                 }).horizontalSizing(Sizing.fixed(80)))
                 .padding(Insets.of(5))
@@ -64,14 +71,14 @@ public class SelectRenderTaskScreen extends BaseOwoScreen<FlowLayout> {
 
         FlowLayout itemPreviewPanel = UIContainers.verticalFlow(Sizing.content(), Sizing.content());
 
-        itemPreviewPanel.child(UIComponents.label(Translate.gui("render_task_size", this.items.size())).margins(Insets.of(7)))
+        itemPreviewPanel.child(UIComponents.label(Translate.gui("render_task_size", this.getUsedItems().size())).margins(Insets.of(7)))
                 .horizontalAlignment(HorizontalAlignment.CENTER).padding(Insets.of(3))
                 .surface(Surface.flat(0x77000000).and(Surface.outline(0x77000000)))
                 .margins(Insets.left(10));
 
         FlowLayout itemContainer = UIContainers.verticalFlow(Sizing.content(), Sizing.content());
 
-        List<ItemStack> itemList = this.items.stream().toList();
+        List<ItemStack> itemList = this.getUsedItems().stream().toList();
         int rows = Mth.positiveCeilDiv(itemList.size(), 9);
         for (int row = 0; row < rows; row++) {
             FlowLayout rowContainer = UIContainers.horizontalFlow(Sizing.content(), Sizing.content());
@@ -90,7 +97,30 @@ public class SelectRenderTaskScreen extends BaseOwoScreen<FlowLayout> {
 
         contentPanel.child(itemPreviewPanel);
         mainPanel.child(contentPanel);
+
+        if (!playerHeadItems.isEmpty()) {
+            WikiRendererUI.booleanControl(mainPanel, BatchPropertyBundle.ONLY_PLAYER_HEADS, "only_render_player_heads");
+        }
+
         rootComponent.child(mainPanel);
+    }
+
+    private boolean isUsingOnlyHeadItems() {
+        return !playerHeadItems.isEmpty() && BatchPropertyBundle.ONLY_PLAYER_HEADS.get();
+    }
+
+    private Collection<ItemStack> getUsedItems() {
+        return this.isUsingOnlyHeadItems() ? playerHeadItems : items;
+    }
+
+    @Override
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+        super.extractRenderState(graphics, mouseX, mouseY, a);
+        if (lastHeadItemsState != this.isUsingOnlyHeadItems()) {
+            lastHeadItemsState = !lastHeadItemsState;
+            this.uiAdapter = null;
+            this.rebuildWidgets();
+        }
     }
 
     @Override
