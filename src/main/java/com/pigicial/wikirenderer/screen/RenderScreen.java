@@ -1,6 +1,19 @@
 package com.pigicial.wikirenderer.screen;
 
-import com.mojang.authlib.minecraft.MinecraftProfileTexture;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix3x2f;
+import org.joml.Matrix4fStack;
+import org.jspecify.annotations.NonNull;
+import org.lwjgl.glfw.GLFW;
+
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.FramerateLimitTracker;
 import com.mojang.blaze3d.platform.Window;
@@ -10,7 +23,13 @@ import com.pigicial.wikirenderer.WikiRenderer;
 import com.pigicial.wikirenderer.components.IOStateComponent;
 import com.pigicial.wikirenderer.components.NonResettingScrollContainer;
 import com.pigicial.wikirenderer.components.NotificationComponent;
-import com.pigicial.wikirenderer.property.*;
+import com.pigicial.wikirenderer.property.CroppablePropertyBundle;
+import com.pigicial.wikirenderer.property.DefaultPropertyBundle;
+import com.pigicial.wikirenderer.property.GlobalProperties;
+import com.pigicial.wikirenderer.property.IntProperty;
+import com.pigicial.wikirenderer.property.Property;
+import com.pigicial.wikirenderer.property.PropertyBundle;
+import com.pigicial.wikirenderer.property.SerializablePropertyBundle;
 import com.pigicial.wikirenderer.property.config.WikiRendererConfigs;
 import com.pigicial.wikirenderer.render.DefaultRenderable;
 import com.pigicial.wikirenderer.render.Renderable;
@@ -20,6 +39,7 @@ import com.pigicial.wikirenderer.render.area.side_view.MinimapCalibratorData;
 import com.pigicial.wikirenderer.render.batch.BatchPropertyBundle;
 import com.pigicial.wikirenderer.render.export.ExportPathSpec;
 import com.pigicial.wikirenderer.render.export.FileIO;
+import com.pigicial.wikirenderer.render.export.HeadTextureTextExporter;
 import com.pigicial.wikirenderer.render.export.RenderableDispatcher;
 import com.pigicial.wikirenderer.render.export.animation.AnimationFormat;
 import com.pigicial.wikirenderer.render.export.animation.AnimationHandler;
@@ -31,15 +51,14 @@ import com.pigicial.wikirenderer.render.export.animation.ffmpeg.live.LiveRenderF
 import com.pigicial.wikirenderer.render.export.animation.gifski.GifskiDispatcher;
 import com.pigicial.wikirenderer.render.export.animation.gifski.MemoryBasedGifskiAnimationHandler;
 import com.pigicial.wikirenderer.render.item.AnimationTimingsProvider;
-import com.pigicial.wikirenderer.render.item.ItemRenderable;
 import com.pigicial.wikirenderer.render.particle.ParticleDisplayCondition;
 import com.pigicial.wikirenderer.render.skyblock.frame_based.DyedArmorFrameBasedRenderable;
 import com.pigicial.wikirenderer.render.skyblock.frame_based.FrameBasedRenderable;
 import com.pigicial.wikirenderer.render.skyblock.frame_based.ItemFrameBasedRenderable;
-import com.pigicial.wikirenderer.textures.TextureData;
 import com.pigicial.wikirenderer.textures.TextureDataProvider;
 import com.pigicial.wikirenderer.util.Translate;
 import com.pigicial.wikirenderer.util.compatibility.ShaderCheck;
+
 import io.wispforest.owo.ui.base.BaseOwoScreen;
 import io.wispforest.owo.ui.component.ButtonComponent;
 import io.wispforest.owo.ui.component.TextBoxComponent;
@@ -47,7 +66,14 @@ import io.wispforest.owo.ui.component.UIComponents;
 import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.container.ScrollContainer;
 import io.wispforest.owo.ui.container.UIContainers;
-import io.wispforest.owo.ui.core.*;
+import io.wispforest.owo.ui.core.CursorStyle;
+import io.wispforest.owo.ui.core.HorizontalAlignment;
+import io.wispforest.owo.ui.core.Insets;
+import io.wispforest.owo.ui.core.OwoUIAdapter;
+import io.wispforest.owo.ui.core.Positioning;
+import io.wispforest.owo.ui.core.Sizing;
+import io.wispforest.owo.ui.core.Surface;
+import io.wispforest.owo.ui.core.VerticalAlignment;
 import io.wispforest.owo.ui.util.FocusHandler;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -67,19 +93,6 @@ import net.minecraft.client.renderer.state.gui.BlitRenderState;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Util;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix3x2f;
-import org.joml.Matrix4fStack;
-import org.jspecify.annotations.NonNull;
-import org.lwjgl.glfw.GLFW;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 
 public class RenderScreen extends BaseOwoScreen<FlowLayout> {
 
@@ -730,15 +743,7 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
                         FileIO.saveTextAndNotify(fileText, minimapExportPath, this, "exported_minimap_data_as");
                     }
 
-                    // todo move this
-                    if (renderable instanceof ItemRenderable textureDataProvider && GlobalProperties.get().sbExportItemTextureData.get()) {
-                        TextureData textureData = textureDataProvider.getTextureData(null).get("item");
-                        if (textureData != null) {
-                            String hash = textureData.payload().textures().get(MinecraftProfileTexture.Type.SKIN).getHash();
-                            String text = "{{HeadRender|" + hash + "|creator=Hypixel}}";
-                            FileIO.saveTextAndNotify(text, exportPath, this, "exported_texture_data_as");
-                        }
-                    }
+                    HeadTextureTextExporter.exportIfEnabled(renderable, exportPath, this);
                 });
     }
 
