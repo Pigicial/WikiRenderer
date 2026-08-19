@@ -1,5 +1,6 @@
 package com.pigicial.wikirenderer.render.item;
 
+import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.pigicial.wikirenderer.WikiRenderer;
 import com.pigicial.wikirenderer.mixin.access.ItemStackRenderStateAccessor;
@@ -166,5 +167,25 @@ public class ItemRenderable extends ItemBasedRenderable<ItemRenderablePropertyBu
         List<Integer> animationTimings = new LinkedList<>();
         AnimationTimingUtil.scanTicksToFullyAnimateItem(this, animationTimings);
         return List.of(animationTimings);
+    }
+
+    @Override
+    public Map<String, String> getPngTextMetadata() {
+        TextureData headTextureData = PlayerTextureUtils.getTextureDataFromPlayerHead(this.stack);
+        if (headTextureData == null) {
+            return Map.of();
+        }
+
+        MinecraftProfileTexture skinTexture = headTextureData.payload().textures().get(MinecraftProfileTexture.Type.SKIN);
+        if (skinTexture == null) {
+            return Map.of();
+        }
+
+        String textureId = skinTexture.getHash();
+        if (textureId == null || textureId.isBlank()) {
+            return Map.of();
+        }
+
+        return Map.of("texture_id", textureId);
     }
 }

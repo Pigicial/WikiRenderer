@@ -11,6 +11,8 @@ import net.minecraft.client.input.MouseButtonEvent;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4fStack;
 
+import java.util.Map;
+
 public interface Renderable<P extends PropertyBundle> {
 
     Renderable<PropertyBundle> EMPTY = new EmptyRenderable();
@@ -76,6 +78,10 @@ public interface Renderable<P extends PropertyBundle> {
 
     default int optionallyOverrideExportHeight(int height) {
         return height;
+    }
+
+    default Map<String, String> getPngTextMetadata() {
+        return Map.of();
     }
 
     default void onAnimationStart() {}

@@ -99,6 +99,7 @@
   "gui.wikirenderer.select_atlas": "Atlas",
   "gui.wikirenderer.select_batch_operation": "Select batch operation",
   "gui.wikirenderer.render_task_size": "Items to renders: %s",
+  "gui.wikirenderer.only_render_player_heads": "Only render Player Heads",
 
   "gui.wikirenderer.frame_data": "§nFrame Data",
   "gui.wikirenderer.incomplete_animation": "This animation hasn't fully looped yet and is considered incomplete.",

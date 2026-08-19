@@ -1,6 +1,5 @@
 package com.pigicial.wikirenderer.screen;
 
-import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.FramerateLimitTracker;
 import com.mojang.blaze3d.platform.Window;
@@ -20,6 +19,7 @@ import com.pigicial.wikirenderer.render.area.side_view.MinimapCalibratorData;
 import com.pigicial.wikirenderer.render.batch.BatchPropertyBundle;
 import com.pigicial.wikirenderer.render.export.ExportPathSpec;
 import com.pigicial.wikirenderer.render.export.FileIO;
+import com.pigicial.wikirenderer.render.export.HeadTextureTextExporter;
 import com.pigicial.wikirenderer.render.export.RenderableDispatcher;
 import com.pigicial.wikirenderer.render.export.animation.AnimationFormat;
 import com.pigicial.wikirenderer.render.export.animation.AnimationHandler;
@@ -31,12 +31,10 @@ import com.pigicial.wikirenderer.render.export.animation.ffmpeg.live.LiveRenderF
 import com.pigicial.wikirenderer.render.export.animation.gifski.GifskiDispatcher;
 import com.pigicial.wikirenderer.render.export.animation.gifski.MemoryBasedGifskiAnimationHandler;
 import com.pigicial.wikirenderer.render.item.AnimationTimingsProvider;
-import com.pigicial.wikirenderer.render.item.ItemRenderable;
 import com.pigicial.wikirenderer.render.particle.ParticleDisplayCondition;
 import com.pigicial.wikirenderer.render.skyblock.frame_based.DyedArmorFrameBasedRenderable;
 import com.pigicial.wikirenderer.render.skyblock.frame_based.FrameBasedRenderable;
 import com.pigicial.wikirenderer.render.skyblock.frame_based.ItemFrameBasedRenderable;
-import com.pigicial.wikirenderer.textures.TextureData;
 import com.pigicial.wikirenderer.textures.TextureDataProvider;
 import com.pigicial.wikirenderer.util.Translate;
 import com.pigicial.wikirenderer.util.compatibility.ShaderCheck;
@@ -301,7 +299,7 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
         GlobalProperties globalProperties = GlobalProperties.get();
         WikiRendererUI.booleanControl(rightColumn, globalProperties.useCustomFFmpegPath, "use_custom_ffmpeg_path");
         globalProperties.useCustomFFmpegPath.addRebuildListener(this);
-        globalProperties.useCustomFFmpegPath.futureListen(this, (pro, value) -> {
+        globalProperties.useCustomFFmpegPath.futureListen(this, (_, value) -> {
             if (value && globalProperties.customFFmpegPath.isBlank()) return; // turning on for first time, don't check
             this.detectFFmpeg(true);
         });
@@ -311,7 +309,7 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
             editBox.onChanged().subscribe(path -> globalProperties.customFFmpegPath = path);
 
             try (WikiRendererUI.RowBuilder builder = WikiRendererUI.autoNewLineRow(rightColumn)) {
-                this.refreshCustomFFmpegPathButton = UIComponents.button(Translate.gui("check_ffmpeg_path"), comp -> this.detectFFmpeg(true));
+                this.refreshCustomFFmpegPathButton = UIComponents.button(Translate.gui("check_ffmpeg_path"), _ -> this.detectFFmpeg(true));
                 builder.row.child(refreshCustomFFmpegPathButton);
 
                 WikiRendererUI.dynamicText(builder.row, () -> {
@@ -334,7 +332,7 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
             if (currentAnimationExportData != null) return;
             FFmpegDispatcher.tryCustomPathAgain = true;
         }
-        FFmpegDispatcher.detectFFmpeg().whenComplete((aBoolean, throwable) -> {
+        FFmpegDispatcher.detectFFmpeg().whenComplete((_, throwable) -> {
             this.guiRebuildScheduled = true;
             if (throwable != null) {
                 this.minecraft.execute(() -> this.notify(
@@ -348,7 +346,7 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
     private boolean buildGifskiLoadingOrFailedSection() {
         if (!GifskiDispatcher.wasGifskiCopiedToTempPath()) {
             WikiRendererUI.text(rightColumn, "copying_gifski", false);
-            GifskiDispatcher.createGifskiTemporaryPath().whenComplete((aBoolean, throwable) -> {
+            GifskiDispatcher.createGifskiTemporaryPath().whenComplete((_, throwable) -> {
                 this.guiRebuildScheduled = true;
                 if (throwable != null) {
                     this.minecraft.execute(() -> this.notify(
@@ -407,7 +405,7 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
 
         GlobalProperties globalProperties = GlobalProperties.get();
         try (WikiRendererUI.RowBuilder builder = WikiRendererUI.autoNewLineRow(rightColumn)) {
-            this.exportAnimationButton = UIComponents.button(Translate.gui("export_animation"), button -> this.queueAnimationExport());
+            this.exportAnimationButton = UIComponents.button(Translate.gui("export_animation"), _ -> this.queueAnimationExport());
 
             if (WikiRenderer.currentAnimationHandler != null) {
                 exportAnimationButton.active = false;
@@ -701,7 +699,7 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
         }
 
         RenderableDispatcher.drawIntoImage(this, this.renderable, tickDelta, this.getTimeSinceCreationMs(), renderable.getExportResolution(), renderable.shouldCrop(), dataConsumer)
-                .thenCompose(img -> FileIO.saveImage(img, exportPath).whenComplete((_, _) -> img.close()))
+                .thenCompose(img -> FileIO.saveImage(img, exportPath, this.renderable.getPngTextMetadata()).whenComplete((_, _) -> img.close()))
                 .whenComplete((imageFile, throwable) -> {
                     capturing = false;
                     if (throwable != null) {
@@ -730,15 +728,7 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
                         FileIO.saveTextAndNotify(fileText, minimapExportPath, this, "exported_minimap_data_as");
                     }
 
-                    // todo move this
-                    if (renderable instanceof ItemRenderable textureDataProvider && GlobalProperties.get().sbExportItemTextureData.get()) {
-                        TextureData textureData = textureDataProvider.getTextureData(null).get("item");
-                        if (textureData != null) {
-                            String hash = textureData.payload().textures().get(MinecraftProfileTexture.Type.SKIN).getHash();
-                            String text = "{{HeadRender|" + hash + "|creator=Hypixel}}";
-                            FileIO.saveTextAndNotify(text, exportPath, this, "exported_texture_data_as");
-                        }
-                    }
+                    HeadTextureTextExporter.exportIfEnabled(renderable, exportPath, this);
                 });
     }
 

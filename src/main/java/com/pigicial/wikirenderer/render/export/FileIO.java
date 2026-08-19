@@ -8,12 +8,20 @@ import com.pigicial.wikirenderer.util.Translate;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Util;
+import org.w3c.dom.NodeList;
 
+import javax.imageio.*;
+import javax.imageio.metadata.IIOMetadata;
+import javax.imageio.metadata.IIOMetadataNode;
+import javax.imageio.stream.ImageOutputStream;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -24,6 +32,10 @@ public class FileIO {
     private static final AtomicInteger TASK_COUNT = new AtomicInteger(0);
 
     public static CompletableFuture<File> saveImage(NativeImage image, ExportPathSpec path) {
+        return saveImage(image, path, Map.of());
+    }
+
+    public static CompletableFuture<File> saveImage(NativeImage image, ExportPathSpec path, Map<String, String> pngTextMetadata) {
         CompletableFuture<File> future = new CompletableFuture<>();
 
         TASK_COUNT.incrementAndGet();
@@ -38,6 +50,9 @@ public class FileIO {
 
                 try {
                     image.writeToFile(imageFile);
+                    if (!pngTextMetadata.isEmpty()) {
+                        writePngTextMetadata(imageFile, pngTextMetadata);
+                    }
                     WikiRenderer.LOGGER.info("Image {} saved", imageFile.getAbsolutePath());
                     future.complete(imageFile);
                 } catch (IOException e) {
@@ -50,6 +65,70 @@ public class FileIO {
         }
 
         return future;
+    }
+
+    private static void writePngTextMetadata(File imageFile, Map<String, String> pngTextMetadata) throws IOException {
+        BufferedImage image = ImageIO.read(imageFile);
+        if (image == null) {
+            throw new IOException("Could not decode png image to append metadata: " + imageFile.getAbsolutePath());
+        }
+
+        Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("png");
+        if (!writers.hasNext()) {
+            throw new IOException("No PNG ImageWriter available");
+        }
+
+        ImageWriter writer = writers.next();
+        try (ImageOutputStream output = ImageIO.createImageOutputStream(imageFile)) {
+            if (output == null) {
+                throw new IOException("Could not create output stream for image metadata: " + imageFile.getAbsolutePath());
+            }
+
+            writer.setOutput(output);
+            ImageWriteParam params = writer.getDefaultWriteParam();
+
+            ImageTypeSpecifier typeSpecifier = ImageTypeSpecifier.createFromRenderedImage(image);
+            IIOMetadata metadata = writer.getDefaultImageMetadata(typeSpecifier, params);
+            String nativeFormat = metadata.getNativeMetadataFormatName();
+
+            IIOMetadataNode root = (IIOMetadataNode) metadata.getAsTree(nativeFormat);
+            IIOMetadataNode textNode = getOrCreateChild(root, "tEXt");
+
+            for (Map.Entry<String, String> entry : pngTextMetadata.entrySet()) {
+                removeExistingTextEntry(textNode, entry.getKey());
+
+                IIOMetadataNode textEntryNode = new IIOMetadataNode("tEXtEntry");
+                textEntryNode.setAttribute("keyword", entry.getKey());
+                textEntryNode.setAttribute("value", entry.getValue());
+                textNode.appendChild(textEntryNode);
+            }
+
+            metadata.mergeTree(nativeFormat, root);
+            writer.write(null, new IIOImage(image, null, metadata), params);
+        } finally {
+            writer.dispose();
+        }
+    }
+
+    private static IIOMetadataNode getOrCreateChild(IIOMetadataNode root, String childName) {
+        NodeList children = root.getElementsByTagName(childName);
+        if (children.getLength() > 0) {
+            return (IIOMetadataNode) children.item(0);
+        }
+
+        IIOMetadataNode created = new IIOMetadataNode(childName);
+        root.appendChild(created);
+        return created;
+    }
+
+    private static void removeExistingTextEntry(IIOMetadataNode textNode, String keyword) {
+        NodeList textEntries = textNode.getElementsByTagName("tEXtEntry");
+        for (int i = textEntries.getLength() - 1; i >= 0; i--) {
+            IIOMetadataNode node = (IIOMetadataNode) textEntries.item(i);
+            if (keyword.equals(node.getAttribute("keyword"))) {
+                textNode.removeChild(node);
+            }
+        }
     }
 
     public static CompletableFuture<File> saveText(String text, ExportPathSpec path, String extension) {
