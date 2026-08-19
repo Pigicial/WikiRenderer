@@ -16,10 +16,12 @@ import com.pigicial.wikirenderer.screen.SelectRenderTaskScreen;
 import com.pigicial.wikirenderer.textures.PlayerTextureUtils;
 import com.pigicial.wikirenderer.textures.TextureData;
 import com.pigicial.wikirenderer.util.Translate;
+import com.pigicial.wikirenderer.util.compatibility.REISearchFocus;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.EditBox;
@@ -48,6 +50,8 @@ public class WikiRendererKeybinds {
     public static final KeyMapping KEYBIND_RENDER_INVENTORY = new KeyMapping("key.wikirenderer.render_inventory", GLFW.GLFW_KEY_SEMICOLON, CATEGORY);
     public static final KeyMapping KEYBIND_BATCH_RENDER_INVENTORY_ITEMS = new KeyMapping("key.wikirenderer.batch_render_inventory", GLFW.GLFW_KEY_K, CATEGORY);
 
+    private static final boolean REI_LOADED = FabricLoader.getInstance().isModLoaded("roughlyenoughitems");
+
     public static void registerKeyBinds() {
         KeyMappingHelper.registerKeyMapping(KEYBIND_SELECT_AREA);
         KeyMappingHelper.registerKeyMapping(KEYBIND_SELECT_AREA_EXPAND);
@@ -66,28 +70,28 @@ public class WikiRendererKeybinds {
                 } else {
                     AreaSelectionHelper.select();
                 }
-                return;
-            }
-            if (KEYBIND_SELECT_AREA_EXPAND.consumeClick()) {
+            } else if (KEYBIND_SELECT_AREA_EXPAND.consumeClick()) {
                 if (client.player.isShiftKeyDown()) {
                     AreaSelectionHelper.clear();
                 } else {
                     AreaSelectionHelper.expand();
                 }
-                return;
-            }
+            } else {
+                if (KEYBIND_RENDER_HOVERED_ITEM_OR_VIEWED_ENTITY.consumeClick()) {
+                    RenderEntitySubCommand.renderTargetedEntity(null);
+                }
 
-            if (KEYBIND_RENDER_HOVERED_ITEM_OR_VIEWED_ENTITY.consumeClick()) {
-                RenderEntitySubCommand.renderTargetedEntity(null);
-            }
-
-            if (KEYBIND_RENDER_TARGETED_BLOCK.consumeClick()) {
-                RenderBlockSubCommand.renderTargetedBlock(null);
+                if (KEYBIND_RENDER_TARGETED_BLOCK.consumeClick()) {
+                    RenderBlockSubCommand.renderTargetedBlock(null);
+                }
             }
         });
 
         ScreenEvents.AFTER_INIT.register((client, screen, _, _) -> ScreenKeyboardEvents.afterKeyPress(screen).register((_, key) -> {
             if (Minecraft.getInstance().options.keyDebugModifier.isDown()) {
+                return;
+            }
+            if (isTypingInAnyTextField(screen)) {
                 return;
             }
 
@@ -130,6 +134,10 @@ public class WikiRendererKeybinds {
                 }
             }
         }));
+    }
+
+    private static boolean isTypingInAnyTextField(Screen screen) {
+        return screen.getFocused() instanceof EditBox || (REI_LOADED && REISearchFocus.isSearchFieldFocused());
     }
 
     @Nullable
