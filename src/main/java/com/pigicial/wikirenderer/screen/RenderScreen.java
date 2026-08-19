@@ -1,6 +1,5 @@
 package com.pigicial.wikirenderer.screen;
 
-import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.FramerateLimitTracker;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -21,6 +20,7 @@ import com.pigicial.wikirenderer.render.area.side_view.MinimapCalibratorData;
 import com.pigicial.wikirenderer.render.batch.BatchPropertyBundle;
 import com.pigicial.wikirenderer.render.export.ExportPathSpec;
 import com.pigicial.wikirenderer.render.export.FileIO;
+import com.pigicial.wikirenderer.render.export.HeadTextureTextExporter;
 import com.pigicial.wikirenderer.render.export.RenderableDispatcher;
 import com.pigicial.wikirenderer.render.export.animation.AnimationFormat;
 import com.pigicial.wikirenderer.render.export.animation.AnimationHandler;
@@ -32,7 +32,6 @@ import com.pigicial.wikirenderer.render.export.animation.ffmpeg.live.LiveRenderF
 import com.pigicial.wikirenderer.render.export.animation.gifski.GifskiDispatcher;
 import com.pigicial.wikirenderer.render.export.animation.gifski.MemoryBasedGifskiAnimationHandler;
 import com.pigicial.wikirenderer.render.item.AnimationTimingsProvider;
-import com.pigicial.wikirenderer.render.item.ItemRenderable;
 import com.pigicial.wikirenderer.render.particle.ParticleDisplayCondition;
 import com.pigicial.wikirenderer.render.skyblock.frame_based.DyedArmorFrameBasedRenderable;
 import com.pigicial.wikirenderer.render.skyblock.frame_based.FrameBasedRenderable;
@@ -728,15 +727,7 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
                         FileIO.saveTextAndNotify(fileText, minimapExportPath, this, "exported_minimap_data_as");
                     }
 
-                    // todo move this
-                    if (renderable instanceof ItemRenderable textureDataProvider && GlobalProperties.get().sbExportItemTextureData.get()) {
-                        TextureData textureData = textureDataProvider.getTextureData(null).get("item");
-                        if (textureData != null) {
-                            String hash = textureData.payload().textures().get(MinecraftProfileTexture.Type.SKIN).getHash();
-                            String text = "{{HeadRender|" + hash + "|creator=Hypixel}}";
-                            FileIO.saveTextAndNotify(text, exportPath, this, "exported_texture_data_as");
-                        }
-                    }
+                    HeadTextureTextExporter.exportIfEnabled(renderable, exportPath, this);
                 });
     }
 

@@ -20,6 +20,7 @@ public class BatchPropertyBundle extends DefaultCroppablePropertyBundle {
     private static final IntProperty ITEM_RESOLUTION_PROPERTY = IntProperty.of(160, 1, Short.MAX_VALUE / 2);
     private static final IntProperty BLOCK_ITEM_RESOLUTION_PROPERTY = IntProperty.of(300, 1, Short.MAX_VALUE / 2);
     public static final Property<Boolean> EXPORT_AS_ANIMATIONS = Property.of(false);
+    public static final Property<Boolean> ONLY_PLAYER_HEADS = Property.of(false);
     public static String fileNameFormatter = "%name%";
 
     private final BatchRenderable<?> batchRenderable;
