@@ -1,7 +1,13 @@
 package com.pigicial.wikirenderer.util;
 
+import net.minecraft.client.Minecraft;
+
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.io.IOException;
 
 public class ClipboardUtil {
     private static final boolean HAS_TEXT_CLIPBOARD;
@@ -29,12 +35,22 @@ public class ClipboardUtil {
 
     public static void setClipboard(String text) {
         if (HAS_TEXT_CLIPBOARD) {
-            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(text), (clipboard, contents) -> {});
+            System.out.println("Hi 2.");
+            StringSelection selection = new StringSelection(text);
+            Clipboard systemClipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            systemClipboard.setContents(selection, selection);
+
+            try {
+                System.out.println("systemClipboard.getContents(null) = " + systemClipboard.getContents(null).getTransferData(DataFlavor.stringFlavor));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
     public static void setClipboard(ImageTransferable imageTransferable) {
         if (hasImageClipboardAccess()) {
+            System.out.println("Hi.");
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(imageTransferable, imageTransferable);
         }
     }

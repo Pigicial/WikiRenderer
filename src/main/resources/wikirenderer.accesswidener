@@ -13,3 +13,10 @@ accessible method net/minecraft/client/gui/GuiGraphicsExtractor setTooltipForNex
 accessible method net/minecraft/client/gui/GuiGraphicsExtractor componentHoverEffect (Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Style;II)V
 accessible method net/minecraft/client/gui/components/Checkbox <init> (IIILnet/minecraft/network/chat/Component;Lnet/minecraft/client/gui/Font;ZLnet/minecraft/client/gui/components/Checkbox$OnValueChange;)V
 accessible class net/minecraft/client/gui/render/GuiRenderer$Draw
+
+accessible method com/mojang/blaze3d/platform/NativeImage checkAllocated ()V
+accessible method com/mojang/blaze3d/platform/NativeImage$WriteCallback <init> (Ljava/nio/channels/WritableByteChannel;)V
+accessible class com/mojang/blaze3d/platform/NativeImage$WriteCallback
+accessible field com/mojang/blaze3d/platform/NativeImage$Format pngColorType I
+accessible field com/mojang/blaze3d/platform/NativeImage size J
+accessible method com/mojang/blaze3d/platform/NativeImage checkSpngError (Ljava/lang/String;I)V

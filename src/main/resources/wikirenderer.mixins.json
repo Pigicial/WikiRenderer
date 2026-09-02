@@ -35,7 +35,6 @@
     "access.MannequinAccessor",
     "access.ModelPartAccessor",
     "access.NativeImageAccessor",
-    "access.NativeImageInvoker",
     "access.ParticleAccessor",
     "access.ParticleEngineAccessor",
     "access.ParticleGroupAccessor",

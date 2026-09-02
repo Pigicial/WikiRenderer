@@ -2,7 +2,6 @@ package com.pigicial.wikirenderer.property;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.pigicial.wikirenderer.WikiRenderer;
-import com.pigicial.wikirenderer.mixin.access.NativeImageInvoker;
 import com.pigicial.wikirenderer.render.Renderable;
 import com.pigicial.wikirenderer.render.export.ExportPathSpec;
 import com.pigicial.wikirenderer.render.export.RenderableDispatcher;
@@ -20,12 +19,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.util.Util;
 import org.joml.Matrix4fStack;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.nio.channels.Channels;
-import java.nio.channels.WritableByteChannel;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public interface PropertyBundle {
 
@@ -84,12 +80,16 @@ public interface PropertyBundle {
                     RenderableDispatcher.drawIntoImage(screen, renderable, tickDelta, screen.getTimeSinceCreationMs(), renderable.getExportResolution(), renderable.shouldCrop(), null)
                             .whenComplete((image, _) -> {
                                 try (image) {
-                                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                                    WritableByteChannel channel = Channels.newChannel(stream);
+                                    // ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                                    // WritableByteChannel channel = Channels.newChannel(stream);
 
-                                    ((NativeImageInvoker) (Object) image).wikirenderer$write(channel);
+                                    //((NativeImageInvoker) (Object) image).wikirenderer$write(channel);
+                                    // FileIO.writeToFile(image, channel);
 
-                                    ImageTransferable transferable = new ImageTransferable(javax.imageio.ImageIO.read(new ByteArrayInputStream(stream.toByteArray())));
+                                    Path tempFile = Files.createTempFile("minecraft_wikirenderer_mod_clipboard_image", ".png");
+                                    image.writeToFile(tempFile);
+                                    ImageTransferable transferable = new ImageTransferable(javax.imageio.ImageIO.read(tempFile.toFile()));
+
                                     ClipboardUtil.setClipboard(transferable);
                                 } catch (IOException e) {
                                     WikiRenderer.LOGGER.error("mfw", e);

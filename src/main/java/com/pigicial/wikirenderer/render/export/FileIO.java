@@ -8,6 +8,9 @@ import com.pigicial.wikirenderer.util.Translate;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Util;
+import org.lwjgl.system.MemoryStack;
+import org.lwjgl.util.spng.SPNG;
+import org.lwjgl.util.spng.spng_ihdr;
 import org.w3c.dom.NodeList;
 
 import javax.imageio.*;
@@ -17,6 +20,9 @@ import javax.imageio.stream.ImageOutputStream;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import java.nio.channels.WritableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,6 +36,34 @@ import java.util.stream.Stream;
 public class FileIO {
 
     private static final AtomicInteger TASK_COUNT = new AtomicInteger(0);
+
+    public static void writeToFile(NativeImage image, WritableByteChannel out) throws IOException {
+        image.checkAllocated();
+        long context = SPNG.spng_ctx_new(2);
+
+        try (
+                Arena arena = Arena.ofConfined();
+                MemoryStack stack = MemoryStack.stackPush();
+        ) {
+            int width = image.getWidth();
+            int height = Math.min(image.getHeight(), Integer.MAX_VALUE / width / image.format().components());
+            if (height < image.getHeight()) {
+                WikiRenderer.LOGGER.warn("Dropping image height from {} to {} to fit the size into 32-bit signed int", image.getHeight(), height);
+            }
+
+            NativeImage.WriteCallback writer = new NativeImage.WriteCallback(out);
+            MemorySegment writerUpcall = writer.createUpcall(arena);
+            NativeImage.checkSpngError("set output", SPNG.nspng_set_png_stream(context, writerUpcall.address(), 0L));
+            spng_ihdr header = spng_ihdr.calloc(stack).width(width).height(height).color_type((byte)image.format().pngColorType).bit_depth((byte)8);
+            NativeImage.checkSpngError("set header", SPNG.spng_set_ihdr(context, header));
+            NativeImage.checkSpngError("write image", SPNG.nspng_encode_image(context, image.getPointer(), image.size, 256, 2));
+            writer.throwIfException();
+        } catch (IOException e) {
+            throw new IOException("Could not write image to the PNG channel", e);
+        } finally {
+            SPNG.spng_ctx_free(context);
+        }
+    }
 
     public static CompletableFuture<File> saveImage(NativeImage image, ExportPathSpec path) {
         return saveImage(image, path, Map.of());

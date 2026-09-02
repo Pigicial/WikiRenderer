@@ -20,13 +20,16 @@ public class ImageTransferable implements Transferable, ClipboardOwner {
 
     @Override
     public boolean isDataFlavorSupported(DataFlavor flavor) {
-        return flavor.equals(DataFlavor.imageFlavor);
+        boolean equals = flavor.equals(DataFlavor.imageFlavor);
+        System.out.println("It is " + equals);
+        return equals;
     }
 
     @NotNull
     @Override
     public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException {
         if (!this.isDataFlavorSupported(flavor)) {
+            System.out.println("Ruh roh");
             throw new UnsupportedFlavorException(flavor);
         }
 

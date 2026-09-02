@@ -16,9 +16,11 @@ public class MixinPlugin implements IMixinConfigPlugin {
     static {
         // We force-initialize AWT here so that we can copy stuff to clipboard
         // on macos though, copying images to clipboard isnt supported
+
         if (!GraphicsEnvironment.isHeadless()) {
             try {
                 Toolkit.getDefaultToolkit().getSystemClipboard();
+                LOGGER.info("Initializing AWT");
             } catch (Exception e) {
                 LOGGER.info("Couldn't initialize AWT");
             }
