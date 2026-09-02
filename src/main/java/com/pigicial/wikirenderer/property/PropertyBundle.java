@@ -12,16 +12,13 @@ import com.pigicial.wikirenderer.screen.owo.component.TextBoxComponent;
 import com.pigicial.wikirenderer.screen.owo.container.FlowLayout;
 import com.pigicial.wikirenderer.screen.owo.core.Sizing;
 import com.pigicial.wikirenderer.util.ClipboardUtil;
-import com.pigicial.wikirenderer.util.ImageTransferable;
 import com.pigicial.wikirenderer.util.Translate;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Util;
 import org.joml.Matrix4fStack;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.File;
 
 public interface PropertyBundle {
 
@@ -72,31 +69,19 @@ public interface PropertyBundle {
                 Util.getPlatform().openFile(file);
             }));
 
-            if (ClipboardUtil.hasImageClipboardAccess()) {
-                builder.row.child(WikiRendererUI.button(Translate.gui("export_to_clipboard"), _ -> {
-                    screen.notify(Translate.gui("copied_to_clipboard"));
+            builder.row.child(WikiRendererUI.button(Translate.gui("export_to_clipboard"), _ -> {
+                screen.notify(Translate.gui("copied_to_clipboard"));
 
-                    float tickDelta = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false);
-                    RenderableDispatcher.drawIntoImage(screen, renderable, tickDelta, screen.getTimeSinceCreationMs(), renderable.getExportResolution(), renderable.shouldCrop(), null)
-                            .whenComplete((image, _) -> {
-                                try (image) {
-                                    // ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                                    // WritableByteChannel channel = Channels.newChannel(stream);
-
-                                    //((NativeImageInvoker) (Object) image).wikirenderer$write(channel);
-                                    // FileIO.writeToFile(image, channel);
-
-                                    Path tempFile = Files.createTempFile("minecraft_wikirenderer_mod_clipboard_image", ".png");
-                                    image.writeToFile(tempFile);
-                                    ImageTransferable transferable = new ImageTransferable(javax.imageio.ImageIO.read(tempFile.toFile()));
-
-                                    ClipboardUtil.setClipboard(transferable);
-                                } catch (IOException e) {
-                                    WikiRenderer.LOGGER.error("mfw", e);
-                                }
-                            });
-                }));
-            }
+                float tickDelta = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false);
+                RenderableDispatcher.drawIntoImage(screen, renderable, tickDelta, screen.getTimeSinceCreationMs(), renderable.getExportResolution(), renderable.shouldCrop(), null)
+                        .whenComplete((image, _) -> {
+                            try (image) {
+                                ClipboardUtil.setClipboard(image);
+                            } catch (Exception e) {
+                                WikiRenderer.LOGGER.error("mfw", e);
+                            }
+                        });
+            }));
         }
     }
 
