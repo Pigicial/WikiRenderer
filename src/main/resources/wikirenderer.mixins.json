@@ -6,7 +6,6 @@
   },
   "package": "com.pigicial.wikirenderer.mixin",
   "compatibilityLevel": "JAVA_16",
-  "plugin": "com.pigicial.wikirenderer.mixin.MixinPlugin",
   "client": [
     "FramerateLimitTrackerMixin",
     "GameRendererMixin",
