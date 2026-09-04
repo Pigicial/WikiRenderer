@@ -28,9 +28,9 @@ public class LightmapRenderStateExtractorMixin {
     private Object emulateDayLightColorForBlockRenders(EnvironmentAttributeProbe instance, EnvironmentAttribute<?> attribute, float f, Operation<Integer> original) {
         if (WikiRenderer.inRenderableDraw && AreaPropertyBundle.INSTANCE.emulateDaylight.get()) {
             if (attribute == EnvironmentAttributes.SKY_LIGHT_COLOR) {
-                return -1;
+                return EnvironmentAttributes.SKY_LIGHT_COLOR.defaultValue();
             } else if (attribute == EnvironmentAttributes.SKY_LIGHT_FACTOR) {
-                return 1.0f;
+                return EnvironmentAttributes.SKY_LIGHT_FACTOR.defaultValue();
             }
         }
 
