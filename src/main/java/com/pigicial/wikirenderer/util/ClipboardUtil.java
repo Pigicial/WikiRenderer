@@ -1,21 +1,18 @@
 package com.pigicial.wikirenderer.util;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import com.pigicial.wikirenderer.WikiRenderer;
+import com.pigicial.wikirenderer.mixin.access.NativeImageInvoker;
 import net.minecraft.client.Minecraft;
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.sdl.SDLClipboard;
 import org.lwjgl.sdl.SDL_ClipboardCleanupCallback;
 import org.lwjgl.sdl.SDL_ClipboardDataCallback;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
-import org.lwjgl.util.spng.SPNG;
-import org.lwjgl.util.spng.spng_ihdr;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.lang.foreign.Arena;
-import java.lang.foreign.MemorySegment;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.WritableByteChannel;
@@ -87,36 +84,13 @@ public class ClipboardUtil {
         }
     }
 
-    // Based on NativeImage#writeToFile
-    public static byte[] encodeImageForClipboardUsage(NativeImage image) throws IOException {
-        image.checkAllocated();
-        long context = SPNG.spng_ctx_new(2);
-
+    public static byte[] encodeImageForClipboardUsage(@NotNull NativeImage image) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        try (
-                WritableByteChannel channel = Channels.newChannel(out);
-                Arena arena = Arena.ofConfined();
-                MemoryStack stack = MemoryStack.stackPush();
-        ) {
-            int width = image.getWidth();
-            int height = Math.min(image.getHeight(), Integer.MAX_VALUE / width / image.format().components());
-            if (height < image.getHeight()) {
-                WikiRenderer.LOGGER.warn("Dropping image height from {} to {} to fit the size into 32-bit signed int", image.getHeight(), height);
-            }
 
-            NativeImage.WriteCallback writer = new NativeImage.WriteCallback(channel);
-            MemorySegment writerUpcall = writer.createUpcall(arena);
-            NativeImage.checkSpngError("set output", SPNG.nspng_set_png_stream(context, writerUpcall.address(), 0L));
-            spng_ihdr header = spng_ihdr.calloc(stack).width(width).height(height).color_type((byte)image.format().pngColorType).bit_depth((byte)8);
-            NativeImage.checkSpngError("set header", SPNG.spng_set_ihdr(context, header));
-            NativeImage.checkSpngError("write image", SPNG.nspng_encode_image(context, image.getPointer(), image.size, 256, 2));
-            writer.throwIfException();
-
+        try (WritableByteChannel channel = Channels.newChannel(out)) {
+            ((NativeImageInvoker) (Object) image).wikirenderer$checkAllocated();
+            ((NativeImageInvoker) (Object) image).wikirenderer$writeToChannel(channel);
             return out.toByteArray();
-        } catch (IOException e) {
-            throw new IOException("Could not write image to the byte array", e);
-        } finally {
-            SPNG.spng_ctx_free(context);
         }
     }
 }
