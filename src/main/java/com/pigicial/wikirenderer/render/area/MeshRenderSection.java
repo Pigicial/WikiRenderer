@@ -172,7 +172,7 @@ public class MeshRenderSection extends SectionRenderDispatcher.RenderSection {
                 return;
             }
 
-            CompiledSectionMesh compiledSectionMesh = new CompiledSectionMesh(null, results);
+            CompiledSectionMesh compiledSectionMesh = new CompiledSectionMesh(null, results, 0);
 
             for (Map.Entry<ChunkSectionLayer, MeshData> entry : results.renderedLayers.entrySet()) {
                 MeshData meshData = entry.getValue();

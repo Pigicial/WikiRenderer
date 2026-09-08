@@ -3,6 +3,7 @@ package com.pigicial.wikirenderer.textures;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.services.response.MinecraftTexturesPayload;
+import com.mojang.blaze3d.Blaze3D;
 import com.pigicial.wikirenderer.render.item.ItemRenderable;
 import com.pigicial.wikirenderer.screen.RenderScreen;
 import com.pigicial.wikirenderer.screen.ScreenSchedulerAndSaver;
@@ -13,10 +14,10 @@ import com.pigicial.wikirenderer.util.ClipboardUtil;
 import com.pigicial.wikirenderer.util.Translate;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.Util;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import java.net.URI;
 import java.util.Map;
 
 public interface TextureDataProvider {
@@ -51,19 +52,19 @@ public interface TextureDataProvider {
 
                     builder.row.child(WikiRendererUI.label(mergedText).margins(Insets.of(5, 0, 0, 10)));
 
-                    builder.row.child(WikiRendererUI.button(Translate.gui("open_url"), button -> Util.getPlatform().openUri(texture.getUrl())));
-                    builder.row.child(WikiRendererUI.button(Translate.gui("copy_texture_id"), button -> {
+                    builder.row.child(WikiRendererUI.button(Translate.gui("open_url"), _ -> Blaze3D.openUri(URI.create(texture.getUrl()))));
+                    builder.row.child(WikiRendererUI.button(Translate.gui("copy_texture_id"), _ -> {
                         screen.notify(Translate.gui("copied_texture_id_to_clipboard"));
                         ClipboardUtil.setClipboard(texture.getHash());
                     }));
 
-                    builder.row.child(WikiRendererUI.button(Translate.gui("copy_json"), button -> {
+                    builder.row.child(WikiRendererUI.button(Translate.gui("copy_json"), _ -> {
                         screen.notify(Translate.gui("copied_json_to_clipboard"));
                         ClipboardUtil.setClipboard(PlayerTextureUtils.GSON.toJson(payload));
                     }));
 
                     if (!(this instanceof ItemRenderable) && type == MinecraftProfileTexture.Type.SKIN) {
-                        builder.row.child(WikiRendererUI.button(Translate.gui("render_head"), button -> {
+                        builder.row.child(WikiRendererUI.button(Translate.gui("render_head"), _ -> {
                             ItemStack head = PlayerTextureUtils.createPlayerHead(profile);
                             ScreenSchedulerAndSaver.setSavedScreen(screen);
                             ScreenSchedulerAndSaver.openImmediately(new RenderScreen(new ItemRenderable(head)));

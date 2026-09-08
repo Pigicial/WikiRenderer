@@ -1,5 +1,6 @@
 package com.pigicial.wikirenderer.render.export.animation;
 
+import com.mojang.blaze3d.Blaze3D;
 import com.pigicial.wikirenderer.WikiRenderer;
 import com.pigicial.wikirenderer.render.Renderable;
 import com.pigicial.wikirenderer.render.export.CropData;
@@ -10,7 +11,6 @@ import com.pigicial.wikirenderer.util.Translate;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -76,14 +76,14 @@ public abstract class AnimationHandler implements AutoCloseable {
         }
 
         Minecraft.getInstance().execute(() -> screen.notify(
-                () -> Util.getPlatform().openFile(animationFile),
+                () -> Blaze3D.openPath(animationFile.toPath()),
                 Translate.gui("animation_saved"),
                 Component.literal(ExportPathSpec.exportRoot().relativize(animationFile.toPath()).toString())
         ));
 
         if (framesFolderToLinkTo != null) {
             Minecraft.getInstance().execute(() -> screen.notify(
-                    () -> Util.getPlatform().openFile(framesFolderToLinkTo.toFile()),
+                    () -> Blaze3D.openPath(framesFolderToLinkTo),
                     Translate.gui("animation_frames_saved"),
                     Component.literal(ExportPathSpec.exportRoot().relativize(framesFolderToLinkTo).toString())
             ));

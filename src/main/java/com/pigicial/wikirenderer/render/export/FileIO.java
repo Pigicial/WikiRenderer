@@ -1,5 +1,6 @@
 package com.pigicial.wikirenderer.render.export;
 
+import com.mojang.blaze3d.Blaze3D;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.pigicial.wikirenderer.WikiRenderer;
 import com.pigicial.wikirenderer.property.GlobalProperties;
@@ -7,7 +8,6 @@ import com.pigicial.wikirenderer.screen.RenderScreen;
 import com.pigicial.wikirenderer.util.Translate;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.Util;
 import org.w3c.dom.NodeList;
 
 import javax.imageio.*;
@@ -170,7 +170,7 @@ public class FileIO {
 
     public static void saveTextAndNotify(String text, ExportPathSpec path, String extension, RenderScreen renderScreen, String key) {
         FileIO.saveText(text, path, extension).whenComplete((textFile, t) -> Minecraft.getInstance().execute(() -> renderScreen.notify(
-                () -> Util.getPlatform().openFile(textFile),
+                () -> Blaze3D.openPath(textFile.toPath()),
                 Translate.gui(key),
                 Component.literal(ExportPathSpec.exportRoot().relativize(textFile.toPath()).toString())
         )));

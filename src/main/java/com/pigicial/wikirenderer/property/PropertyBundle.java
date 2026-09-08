@@ -1,5 +1,6 @@
 package com.pigicial.wikirenderer.property;
 
+import com.mojang.blaze3d.Blaze3D;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.pigicial.wikirenderer.WikiRenderer;
 import com.pigicial.wikirenderer.render.Renderable;
@@ -15,7 +16,6 @@ import com.pigicial.wikirenderer.util.ClipboardUtil;
 import com.pigicial.wikirenderer.util.Translate;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.Util;
 import org.joml.Matrix4fStack;
 
 import java.io.File;
@@ -66,7 +66,7 @@ public interface PropertyBundle {
                 if (file.mkdirs()) {
                     WikiRenderer.LOGGER.info("Made possible export directory (open file button pressed) {}", file);
                 }
-                Util.getPlatform().openFile(file);
+                Blaze3D.openPath(file.toPath());
             }));
 
             builder.row.child(WikiRendererUI.button(Translate.gui("export_to_clipboard"), _ -> {

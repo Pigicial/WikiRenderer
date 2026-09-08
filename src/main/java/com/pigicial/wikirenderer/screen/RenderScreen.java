@@ -1,5 +1,6 @@
 package com.pigicial.wikirenderer.screen;
 
+import com.mojang.blaze3d.Blaze3D;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.FramerateLimitTracker;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -7,9 +8,6 @@ import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.textures.FilterMode;
 import com.pigicial.wikirenderer.WikiRenderer;
-import com.pigicial.wikirenderer.screen.components.IOStateComponent;
-import com.pigicial.wikirenderer.screen.components.NonResettingScrollContainer;
-import com.pigicial.wikirenderer.screen.components.NotificationComponent;
 import com.pigicial.wikirenderer.property.*;
 import com.pigicial.wikirenderer.property.config.WikiRendererConfigs;
 import com.pigicial.wikirenderer.render.DefaultRenderable;
@@ -36,6 +34,9 @@ import com.pigicial.wikirenderer.render.particle.ParticleDisplayCondition;
 import com.pigicial.wikirenderer.render.skyblock.frame_based.DyedArmorFrameBasedRenderable;
 import com.pigicial.wikirenderer.render.skyblock.frame_based.FrameBasedRenderable;
 import com.pigicial.wikirenderer.render.skyblock.frame_based.ItemFrameBasedRenderable;
+import com.pigicial.wikirenderer.screen.components.IOStateComponent;
+import com.pigicial.wikirenderer.screen.components.NonResettingScrollContainer;
+import com.pigicial.wikirenderer.screen.components.NotificationComponent;
 import com.pigicial.wikirenderer.screen.owo.base.BaseOwoScreen;
 import com.pigicial.wikirenderer.screen.owo.component.ButtonComponent;
 import com.pigicial.wikirenderer.screen.owo.component.TextBoxComponent;
@@ -44,7 +45,6 @@ import com.pigicial.wikirenderer.screen.owo.container.ScrollContainer;
 import com.pigicial.wikirenderer.screen.owo.container.UIContainers;
 import com.pigicial.wikirenderer.screen.owo.core.*;
 import com.pigicial.wikirenderer.screen.owo.util.FocusHandler;
-import com.pigicial.wikirenderer.textures.TextureData;
 import com.pigicial.wikirenderer.textures.TextureDataProvider;
 import com.pigicial.wikirenderer.util.Translate;
 import com.pigicial.wikirenderer.util.compatibility.ShaderCheck;
@@ -65,13 +65,13 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.state.gui.BlitRenderState;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2f;
 import org.joml.Matrix4fStack;
 import org.jspecify.annotations.NonNull;
 
+import java.net.URI;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -382,11 +382,11 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
                     .mouseDown().subscribe((_, _) -> {
                         this.minecraft.setScreenAndShow(new ConfirmLinkScreen(confirmed -> {
                             if (confirmed) {
-                                Util.getPlatform().openUri("https://ffmpeg.org/download.html");
+                                Blaze3D.openUri(URI.create("https://ffmpeg.org/download.html"));
                             }
 
                             this.minecraft.setScreenAndShow(this);
-                        }, "https://ffmpeg.org/download.html", true));
+                        }, URI.create("https://ffmpeg.org/download.html"), true));
                         return true;
                     });
             this.buildFFmpegCustomPathSection();
@@ -712,7 +712,7 @@ public class RenderScreen extends BaseOwoScreen<FlowLayout> {
 
                     if (popupText) {
                         this.minecraft.execute(() -> this.notify(
-                                () -> Util.getPlatform().openFile(imageFile),
+                                () -> Blaze3D.openPath(imageFile.toPath()),
                                 Translate.gui("exported_as"),
                                 Component.literal(ExportPathSpec.exportRoot().relativize(imageFile.toPath()).toString())
                         ));
